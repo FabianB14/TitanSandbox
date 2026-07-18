@@ -2744,6 +2744,18 @@ if(isIOS&&!isStandalone){
     'It will launch fullscreen like an app.';
 }else if(isStandalone){
   document.getElementById('menuTip').textContent='Running as an installed app.';
+}else{
+  /* Android/desktop: if the browser never offers the install event
+     (already installed, or the prompt was dismissed in the past),
+     show the always-available menu path instead */
+  setTimeout(()=>{
+    if(!installEv&&!isStandalone){
+      document.getElementById('menuTip').innerHTML=
+        'To install: open your browser&#8217;s <b>&#8942; menu</b> (top right) and choose '+
+        '<b>&#8220;Add to Home screen&#8221;</b> or <b>&#8220;Install app&#8221;</b>. '+
+        'If you don&#8217;t see it, the app may already be on your home screen.';
+    }
+  },3000);
 }
 document.getElementById('menuBtn').addEventListener('click',()=>openMenu());
 document.getElementById('exitBtn').addEventListener('click',()=>{

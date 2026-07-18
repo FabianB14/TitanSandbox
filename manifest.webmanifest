@@ -2,6 +2,7 @@
   "name": "Titan Sandbox",
   "short_name": "Titan Sandbox",
   "description": "A 2D kaiju physics sandbox — stomp, burn, and blast a crumbling city.",
+  "id": "./",
   "start_url": ".",
   "scope": ".",
   "display": "fullscreen",

@@ -35,15 +35,32 @@ buildings with his breath.
     forked lightning that slams around its target. Cackling triple screech.
   - **Vanguard** (store unlock) — a hero mech in white armor with a gold
     V-crest, red intakes, and a rapid plasma rifle.
-- **Ultimates** — every kaiju has a signature super-attack on a 25s
+  - **Skyrend** (store unlock) — a crimson flying wyvern that hovers on
+    beating wings and blasts hurricane gusts. Raptor screech.
+  - **Lumen** (store unlock) — a luminous emerald sky insect flying on
+    translucent veined wings, firing a shimmering prismatic ray. Eerie
+    chiming call.
+  - **Fenrix** (store unlock) — a frost-white alpine beast with freezing
+    breath. Mournful howl.
+  - **Krustor** (store unlock) — an armored tide crab that fires scalding
+    geyser blasts. Staccato clatter.
+  - **Magnar** (store unlock) — a molten obsidian golem lobbing exploding
+    magma boulders. Subterranean rumble.
+  - **Umbrax** (store unlock) — a horned void stalker with a violet
+    annihilation beam. Hollow wail.
+- **Flight** — winged flyers (Skyrend, Lumen) take off and hover above the
+  streets on animated wingbeats, raining their attacks from the air.
+- **Ultimates** — every kaiju has a signature super-attack on a 10s
   cooldown (Ultimate tool, also used by the AI in fights): Overcharge Beam,
   Seismic Slam, Venom Deluge, Meltdown Nova, Sweep Laser, Skyfall Storm,
-  and Missile Barrage.
+  Missile Barrage, Cyclone Dive, Prism Cascade, Glacial Howl, Tidal
+  Barrage, Eruption, and Void Collapse.
 - **Deployable military** — Tank, Heli, Jet Strike, and Ship tools let you
   drop the army in wherever you tap, alongside the automatic defense waves.
 - **Coins & store** — earn coins for crushing buildings, clearing levels,
   winning kaiju fights, wrecking the military, and popping cars; spend them
-  in the in-game store to unlock Hydrax and Vanguard (saved on-device).
+  in the in-game store to unlock eight kaiju: Hydrax, Vanguard, Skyrend,
+  Lumen, Fenrix, Krustor, Magnar, and Umbrax (saved on-device).
 - **Warships** — on water levels destroyers cruise the bay and shell the
   kaiju alongside the tanks, helicopters, and jets. Cars explode from hard
   impacts, blasts, and beam fire — with chain reactions.
@@ -74,7 +91,8 @@ buildings with his breath.
   mixing breath attacks and ultimates, clearing level after level.
 - **Custom sprites (optional)** — drop PNGs into a `sprites/` folder named
   `<species>_<part>.png` (species: titan, ape, drax, scorn, mecha, hydrax,
-  vang; parts: torso, head, jaw, arm, leg, tail0-2, wings) and the game
+  vang, sky, lum, fen, kru, mag, umb; parts: torso, head, jaw, arm, leg,
+  tail0-2, wings) and the game
   swaps them in over the generated art at load, inheriting the animation
   rig. Only ship art you have the rights to.
 - **Kaiju Forge** — the companion sprite studio at

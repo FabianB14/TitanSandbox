@@ -129,6 +129,12 @@
   <button data-tool="mecha"><span class="ico">&#129302;</span>Meka</button>
   <button data-tool="hydrax" id="btnHydrax"><span class="ico">&#128329;</span>Hydrax</button>
   <button data-tool="vang" id="btnVang"><span class="ico">&#9889;</span>Vanguard</button>
+  <button data-tool="sky" id="btnSky"><span class="ico">&#129413;</span>Skyrend</button>
+  <button data-tool="lum" id="btnLum"><span class="ico">&#129419;</span>Lumen</button>
+  <button data-tool="fen" id="btnFen"><span class="ico">&#128058;</span>Fenrix</button>
+  <button data-tool="kru" id="btnKru"><span class="ico">&#129408;</span>Krustor</button>
+  <button data-tool="mag" id="btnMag"><span class="ico">&#127755;</span>Magnar</button>
+  <button data-tool="umb" id="btnUmb"><span class="ico">&#127761;</span>Umbrax</button>
   <button data-tool="building"><span class="ico">&#127970;</span>Building</button>
   <button data-tool="bomb"><span class="ico">&#128163;</span>Bomb</button>
   <button data-tool="nuke"><span class="ico">&#9762;</span>A-Bomb</button>
@@ -163,6 +169,36 @@
       <div class="shopName">&#9889; VANGUARD</div>
       <div class="shopDesc">Hero mech. White armor, V-crest, rapid plasma rifle.</div>
       <button class="buyBtn" data-key="vang">BUY — 600</button>
+    </div>
+    <div class="shopItem" id="shopSky">
+      <div class="shopName">&#129413; SKYREND</div>
+      <div class="shopDesc">Crimson flying wyvern. Hurricane gust breath, Cyclone Dive ultimate.</div>
+      <button class="buyBtn" data-key="sky">BUY — 700</button>
+    </div>
+    <div class="shopItem" id="shopLum">
+      <div class="shopName">&#129419; LUMEN</div>
+      <div class="shopDesc">Luminous sky insect. Flies on prismatic wings, shimmering prism ray, Prism Cascade.</div>
+      <button class="buyBtn" data-key="lum">BUY — 700</button>
+    </div>
+    <div class="shopItem" id="shopFen">
+      <div class="shopName">&#128058; FENRIX</div>
+      <div class="shopDesc">Frost-white alpine beast. Freezing breath, chilling Glacial Howl.</div>
+      <button class="buyBtn" data-key="fen">BUY — 500</button>
+    </div>
+    <div class="shopItem" id="shopKru">
+      <div class="shopName">&#129408; KRUSTOR</div>
+      <div class="shopDesc">Armored tide crab. Scalding geyser blasts, Tidal Barrage ultimate.</div>
+      <button class="buyBtn" data-key="kru">BUY — 500</button>
+    </div>
+    <div class="shopItem" id="shopMag">
+      <div class="shopName">&#127755; MAGNAR</div>
+      <div class="shopDesc">Molten obsidian golem. Lobs exploding magma, Eruption rains fire.</div>
+      <button class="buyBtn" data-key="mag">BUY — 900</button>
+    </div>
+    <div class="shopItem" id="shopUmb">
+      <div class="shopName">&#127761; UMBRAX</div>
+      <div class="shopDesc">Void stalker. Violet annihilation beam, Void Collapse ultimate.</div>
+      <button class="buyBtn" data-key="umb">BUY — 1000</button>
     </div>
     <div id="storeHint">Earn coins by crushing buildings, clearing levels, wrecking the military, and winning kaiju fights.</div>
     <button id="storeClose">CLOSE</button>
@@ -218,9 +254,9 @@ engine.gravity.y=1;
 let titans=[],buildings=[],cars=[],bombs=[],nukes=[],particles=[],breakCons=[],allBricks=[];
 let flash=0,LVL=0,LITCH=0.085,banner='',bannerSub='',bannerT=0,levelClearAt=0,paused=true;
 let coins=parseInt(localStorage.getItem('ts_coins')||'0',10)||0;
-const OWN={hydrax:localStorage.getItem('ts_own_hydrax')==='1',
-           vang:localStorage.getItem('ts_own_vang')==='1'};
-const PRICES={hydrax:800,vang:600};
+const PRICES={hydrax:800,vang:600,sky:700,lum:700,fen:500,kru:500,mag:900,umb:1000};
+const OWN={};
+for(const k in PRICES)OWN[k]=localStorage.getItem('ts_own_'+k)==='1';
 function award(n,x,y){
   coins+=n;
   localStorage.setItem('ts_coins',String(coins));
@@ -262,6 +298,71 @@ function boom(){
 }
 function roarFor(spec){
   if(!AC)return;
+  if(spec&&spec.roar){
+    const t=AC.currentTime;
+    if(spec.roar==='screech'){
+      /* raptor shriek: two fast descending cries */
+      for(const dt of [0,0.28]){
+        const o=AC.createOscillator();o.type='sawtooth';
+        o.frequency.setValueAtTime(980,t+dt);
+        o.frequency.exponentialRampToValueAtTime(330,t+dt+0.26);
+        const g=AC.createGain();g.gain.setValueAtTime(0.0001,t+dt);
+        g.gain.exponentialRampToValueAtTime(0.13,t+dt+0.03);
+        g.gain.exponentialRampToValueAtTime(0.001,t+dt+0.3);
+        const fl=AC.createBiquadFilter();fl.type='bandpass';fl.Q.value=2;fl.frequency.value=1900;
+        o.connect(fl);fl.connect(g);g.connect(AC.destination);
+        o.start(t+dt);o.stop(t+dt+0.34);
+      }
+    }else if(spec.roar==='chime'){
+      /* eerie resonant triad */
+      for(const [dt,f0] of [[0,523],[0.1,659],[0.2,784]]){
+        const o=AC.createOscillator();o.type='sine';
+        o.frequency.setValueAtTime(f0,t+dt);
+        const g=AC.createGain();g.gain.setValueAtTime(0.0001,t+dt);
+        g.gain.exponentialRampToValueAtTime(0.10,t+dt+0.04);
+        g.gain.exponentialRampToValueAtTime(0.001,t+dt+0.9);
+        o.connect(g);g.connect(AC.destination);o.start(t+dt);o.stop(t+dt+0.95);
+      }
+    }else if(spec.roar==='howl'){
+      /* wolf howl: rise, hold, mournful fall */
+      const o=AC.createOscillator();o.type='sawtooth';
+      o.frequency.setValueAtTime(240,t);
+      o.frequency.exponentialRampToValueAtTime(470,t+0.35);
+      o.frequency.setValueAtTime(470,t+0.7);
+      o.frequency.exponentialRampToValueAtTime(180,t+1.5);
+      const g=AC.createGain();g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.15,t+0.1);
+      g.gain.setValueAtTime(0.15,t+0.9);
+      g.gain.exponentialRampToValueAtTime(0.001,t+1.6);
+      const fl=AC.createBiquadFilter();fl.type='lowpass';fl.frequency.value=900;
+      o.connect(fl);fl.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+1.65);
+    }else if(spec.roar==='click'){
+      /* crustacean clatter: staccato clicks */
+      for(let i=0;i<6;i++){
+        const dt=i*0.09+Math.random()*0.03;
+        const sN=AC.createBufferSource();sN.buffer=noiseBuf();
+        const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=1800;
+        const g=AC.createGain();g.gain.setValueAtTime(0.14,t+dt);
+        g.gain.exponentialRampToValueAtTime(0.001,t+dt+0.05);
+        sN.connect(f);f.connect(g);g.connect(AC.destination);
+        sN.start(t+dt);sN.stop(t+dt+0.06);
+      }
+    }else if(spec.roar==='rumble'){
+      roarSnd(true);
+    }else if(spec.roar==='wail'){
+      /* hollow void wail */
+      const o=AC.createOscillator();o.type='sawtooth';
+      o.frequency.setValueAtTime(640,t);
+      o.frequency.exponentialRampToValueAtTime(150,t+1.3);
+      const g=AC.createGain();g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.14,t+0.08);
+      g.gain.exponentialRampToValueAtTime(0.001,t+1.4);
+      const fl=AC.createBiquadFilter();fl.type='bandpass';fl.Q.value=4;
+      fl.frequency.setValueAtTime(900,t);fl.frequency.exponentialRampToValueAtTime(280,t+1.3);
+      o.connect(fl);fl.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+1.45);
+    }
+    return;
+  }
   if(spec&&spec.mech){
     /* synthetic klaxon blast */
     const t=AC.currentTime;
@@ -567,6 +668,37 @@ const SPECIES={
     fin:['#eef2f6','#c2ccd6','#8892a0'],
     pal:{top:'#dde3ea',mid:'#aab4be',low:'#77828c',deep:'#4a545e'},
     z:1.02,armL:1.05,legL:1.05,tailZ:0.45,horn:false,fur:false,walk:1.5},
+  sky:{key:'sky',label:'Skyrend',gust:true,flyer:true,wings:true,roar:'screech',
+    glow:'255,150,70',beam:'255,170,100',
+    wingPal:['rgba(216,124,84,0.95)','rgba(152,72,46,0.95)','rgba(98,46,32,0.95)'],
+    fin:['#e8c9a8','#c49a72','#8a6448'],
+    pal:{top:'#8a5540',mid:'#65392c',low:'#472720',deep:'#2f1a16'},
+    z:0.98,armL:0.7,legL:0.9,tailZ:1.0,horn:true,fur:false,walk:1.6},
+  lum:{key:'lum',label:'Lumen',prism:true,flyer:true,wings:true,wingStyle:'insect',roar:'chime',
+    glow:'150,255,210',beam:'170,255,220',
+    fin:['#d8ffe9','#9be8c4','#5aa583'],
+    pal:{top:'#4f8a72',mid:'#37634f',low:'#254236',deep:'#182c24'},
+    z:0.95,armL:0.6,legL:0.85,tailZ:0.8,horn:false,fur:false,walk:1.6},
+  fen:{key:'fen',label:'Fenrix',frost:true,roar:'howl',
+    glow:'170,220,255',beam:'190,235,255',
+    fin:['#eef6fb','#c2d8e6','#7e9aac'],
+    pal:{top:'#c8d4dc',mid:'#93a4b0',low:'#5f7078',deep:'#3a464e'},
+    z:1.0,armL:1.15,legL:0.9,tailZ:0.9,horn:false,fur:true,walk:1.9},
+  kru:{key:'kru',label:'Krustor',geyser:true,roar:'click',
+    glow:'90,190,215',beam:'120,215,235',
+    fin:['#f0d6b8','#cf9f6f','#8f6a48'],
+    pal:{top:'#b06a3c',mid:'#84492a',low:'#5c3220',deep:'#3a2016'},
+    z:1.02,armL:1.2,legL:0.8,tailZ:0.5,horn:true,fur:false,walk:1.1},
+  mag:{key:'mag',label:'Magnar',magma:true,mutant:true,roar:'rumble',
+    glow:'255,110,30',beam:'255,140,50',
+    fin:['#4a3a34','#332622','#211815'],
+    pal:{top:'#4e423c',mid:'#382d29',low:'#261d1a',deep:'#171110'},
+    z:1.08,armL:1.0,legL:0.95,tailZ:0.9,horn:false,fur:false,walk:0.9},
+  umb:{key:'umb',label:'Umbrax',fire:true,roar:'wail',
+    glow:'200,80,255',beam:'225,120,255',
+    fin:['#6d5a86','#4c3c62','#2e2440'],
+    pal:{top:'#453b57',mid:'#302740',low:'#1f192c',deep:'#14101d'},
+    z:1.04,armL:0.95,legL:1.05,tailZ:1.15,horn:true,fur:false,walk:1.4},
 };
 let DIMS={},SPRS={};
 function makeDims(spec){
@@ -1051,9 +1183,39 @@ function sprTail(spec,D,idx){
 }
 function sprWings(spec,D){
   const s=D.s;
+  if(spec.wingStyle==='insect'){
+    /* twin translucent glowing wing pairs, veined like a dragonfly's */
+    const w=D.torsoW*2.5,h=D.torsoH*1.2;
+    const c=mkCanvas(w,h),g=c.getContext('2d');
+    const cx=w/2,baseY=h*0.70;
+    for(const side of [-1,1]){
+      for(const [dx,dy,rw,rh,rot0] of [[0.27,0.30,0.27,0.14,-0.42],[0.24,0.52,0.23,0.11,-0.12]]){
+        g.save();
+        g.translate(cx+side*w*dx,h*dy);
+        g.rotate(side*rot0);
+        const gr=g.createRadialGradient(0,0,2,0,0,w*rw);
+        gr.addColorStop(0,'rgba(225,255,242,0.72)');
+        gr.addColorStop(0.6,`rgba(${spec.glow},0.34)`);
+        gr.addColorStop(1,`rgba(${spec.glow},0.10)`);
+        g.fillStyle=gr;
+        g.beginPath();g.ellipse(0,0,w*rw,h*rh,0,0,TAU);g.fill();
+        g.strokeStyle=`rgba(${spec.glow},0.55)`;g.lineWidth=1.6*s;g.stroke();
+        g.strokeStyle='rgba(255,255,255,0.28)';g.lineWidth=1;
+        for(const f2 of [-0.55,0,0.55]){
+          g.beginPath();
+          g.moveTo(-side*w*rw*0.9,0);
+          g.quadraticCurveTo(0,f2*h*rh,side*w*rw*0.95,f2*h*rh*1.35);
+          g.stroke();
+        }
+        g.restore();
+      }
+    }
+    return {c,ax:cx,ay:baseY};
+  }
   const w=D.torsoW*2.6,h=D.torsoH*1.35;
   const c=mkCanvas(w,h),g=c.getContext('2d');
   const cx=w/2,baseY=h*0.72;
+  const wp=spec.wingPal||['rgba(214,182,110,0.95)','rgba(150,121,60,0.95)','rgba(104,84,42,0.95)'];
   for(const side of [-1,1]){
     const tipX=cx+side*w*0.46,tipY=h*0.12;
     g.beginPath();
@@ -1064,9 +1226,9 @@ function sprWings(spec,D){
     g.quadraticCurveTo(cx+side*w*0.18,h*0.55,cx+side*w*0.12,h*0.68);
     g.closePath();
     const gr=g.createLinearGradient(cx,h*0.1,cx,h);
-    gr.addColorStop(0,'rgba(214,182,110,0.95)');
-    gr.addColorStop(0.6,'rgba(150,121,60,0.95)');
-    gr.addColorStop(1,'rgba(104,84,42,0.95)');
+    gr.addColorStop(0,wp[0]);
+    gr.addColorStop(0.6,wp[1]);
+    gr.addColorStop(1,wp[2]);
     g.fillStyle=gr;g.fill();
     /* bone fingers */
     g.strokeStyle='rgba(70,58,30,0.55)';g.lineWidth=2.4*s;
@@ -1234,7 +1396,7 @@ function killTitan(t){
       size:rand(10,22),type:'smoke'});
   Body.setAngularVelocity(t.torso,(Math.random()<0.5?-1:1)*0.14);
 }
-const ULT_CD=25000;
+const ULT_CD=10000;
 function ultBlast(t,R,power,dmg,charAmt,col){
   const x=t.torso.position.x,y=Math.min(t.torso.position.y,groundY-20);
   shake=Math.min(55,shake+42);boom();
@@ -1336,13 +1498,52 @@ function triggerUlt(t,target){
     t.barrage=12;
     t.barrageTarget={x:target.x,y:target.y};
     toast('MISSILE BARRAGE');
+  }else if(k==='sky'){
+    /* rocket toward the target and detonate a wind slam on landing */
+    const dx=target.x-t.torso.position.x;
+    Body.setVelocity(t.torso,{x:clamp(dx*0.02,-14,14),y:-11});
+    t.slamAt=now+650;t.slamCol='255,170,100';t.slamR=330;
+    toast('CYCLONE DIVE');
+  }else if(k==='lum'){
+    t.stormUntil=now+2200;t.stormPrism=true;
+    t.breathStart=now;t.breathUntil=now+2200;
+    t.breathTarget={x:target.x,y:target.y};
+    toast('PRISM CASCADE');
+  }else if(k==='fen'){
+    flash=Math.max(flash,0.35);
+    ultBlast(t,330,18,32,0,'190,235,255');
+    for(const o of titans)
+      if(o!==t&&!o.dead&&dist(o.torso.position,t.torso.position)<520)
+        o.staggerUntil=now+2600;
+    toast('GLACIAL HOWL');
+  }else if(k==='kru'){
+    const m=mouthPos(t);
+    for(let i=0;i<18;i++){
+      const a=Math.atan2(target.y-m.y,target.x-m.x)+rand(-0.55,0.55);
+      const sp=rand(7,12);
+      projs.push({x:m.x,y:m.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2.5,type:'geyser',life:150});
+    }
+    t.jawOpen=0.5;
+    toast('TIDAL BARRAGE');
+  }else if(k==='mag'){
+    flash=Math.max(flash,0.4);
+    ultBlast(t,330,20,38,0.7,'255,140,50');
+    for(let i=0;i<14;i++)
+      projs.push({x:t.torso.position.x+rand(-420,420),y:-40-rand(0,220),
+        vx:rand(-1,1),vy:rand(2,5),type:'magma',life:280});
+    toast('ERUPTION');
+  }else if(k==='umb'){
+    flash=Math.max(flash,0.5);
+    ultBlast(t,340,22,40,0.55,'220,90,255');
+    toast('VOID COLLAPSE');
   }
 }
 function ultStep(t,now){
   if(t.dead)return;
   if(t.slamAt&&now>t.slamAt){
     t.slamAt=0;
-    ultBlast(t,360,17,30,0,'230,205,160');
+    ultBlast(t,t.slamR||360,17,30,0,t.slamCol||'230,205,160');
+    t.slamR=null;t.slamCol=null;
     thudSnd(0.6);
   }
   if(t.ult==='sweep'&&now<t.ultUntil){
@@ -1362,7 +1563,8 @@ function ultStep(t,now){
     }
     pts.push({x:ex,y:ey});
     t.bolts=t.bolts||[];
-    t.bolts.push({pts,life:9});
+    t.bolts.push({pts,life:9,
+      col:t.stormPrism?pick(['255,120,190','120,255,200','150,190,255','255,235,130']):null});
     miniBoom(ex,ey,60,4);
   }
   if(t.barrage>0&&frame%5===0){
@@ -1405,6 +1607,13 @@ function muscles(t,now){
   Body.setAngle(body,body.angle*0.90);
   if(Math.abs(body.angle)>0.5)
     Body.setVelocity(body,{x:body.velocity.x,y:body.velocity.y-0.5});
+  /* flyers hover: climb to cruising height and bob there on wingbeats */
+  if(t.spec.flyer){
+    const hoverY=groundY-t.bodyH*0.5-(150*S+Math.sin(now/540)*16*S);
+    Body.setVelocity(body,{x:body.velocity.x,
+      y:body.velocity.y*0.80+clamp((hoverY-body.position.y)*0.02,-1.8,1.8)});
+    t.phase+=0.05;t.walk=Math.min(1,t.walk+0.03);
+  }
   /* stomp toward the nearest building */
   /* targeting: in fight mode hunt the nearest rival kaiju,
      otherwise walk up to the nearest building and halt at its facade */
@@ -1507,7 +1716,7 @@ function muscles(t,now){
     t.phase+=0.065;t.walk=Math.min(1,t.walk+0.05);
     /* footfall: dust, thud, a little physical stomp-hop (bipeds);
        serpents just kick up slither dust */
-    if(!t.spec.serpent&&Math.floor(prev/Math.PI)!==Math.floor(t.phase/Math.PI)){
+    if(!t.spec.serpent&&!t.spec.flyer&&Math.floor(prev/Math.PI)!==Math.floor(t.phase/Math.PI)){
       dustPuff(body.position.x+t.facing*D.torsoW*0.3,groundY-4,3);
       thudSnd(0.3);shake=Math.max(shake,2.4);
       Body.setVelocity(body,{x:body.velocity.x,y:body.velocity.y-0.9});
@@ -1610,6 +1819,46 @@ function breathStep(t,now){
         vx:aim.x*sp+rand(-0.6,0.6),vy:aim.y*sp-2.2+rand(-0.5,0.5),
         type:'venom',life:130});
     }
+  }else if(t.spec.magma){
+    /* heavy molten boulders that burst on impact */
+    if(frame%8===0){
+      const d=dist(t.breathTarget,m);
+      const sp=clamp(d*0.026,5,12);
+      projs.push({x:m.x+aim.x*20*S,y:m.y+aim.y*20*S,
+        vx:aim.x*sp+rand(-0.5,0.5),vy:aim.y*sp-2.6+rand(-0.4,0.4),
+        type:'magma',life:150});
+    }
+  }else if(t.spec.geyser){
+    /* scalding pressurized water blasts */
+    if(frame%7===0){
+      const d=dist(t.breathTarget,m);
+      const sp=clamp(d*0.03,6,13);
+      projs.push({x:m.x+aim.x*20*S,y:m.y+aim.y*20*S,
+        vx:aim.x*sp+rand(-0.7,0.7),vy:aim.y*sp-2.0+rand(-0.5,0.5),
+        type:'geyser',life:130});
+    }
+  }else if(t.spec.frost){
+    /* freezing vapor stream */
+    for(let i=0;i<4;i++){
+      const sp=rand(6,11)*S,j=rand(-0.16,0.16),av=rot(j,aim);
+      addP({x:m.x+aim.x*18*S,y:m.y+aim.y*18*S,
+        vx:av.x*sp+rand(-0.5,0.5),vy:av.y*sp+rand(-0.5,0.5),
+        life:randi(22,42),max:42,size:rand(3,6)*S,type:'ember',
+        col:pick(['190,235,255','235,250,255','150,210,245'])});
+    }
+    if(Math.random()<0.4)
+      addP({x:m.x+aim.x*rand(60,300)*S,y:m.y+aim.y*rand(60,300)*S,
+        vx:rand(-0.3,0.3),vy:rand(-0.8,-0.2),life:randi(30,56),max:56,
+        size:rand(7,14)*S,type:'smoke'});
+  }else if(t.spec.prism){
+    /* shimmering prismatic ray */
+    for(let i=0;i<4;i++){
+      const sp=rand(7,12)*S,j=rand(-0.12,0.12),av=rot(j,aim);
+      addP({x:m.x+aim.x*18*S,y:m.y+aim.y*18*S,
+        vx:av.x*sp+rand(-0.4,0.4),vy:av.y*sp+rand(-0.4,0.4),
+        life:randi(20,40),max:40,size:rand(2.5,5.5)*S,type:'ember',
+        col:pick(['255,120,190','120,255,200','150,190,255','255,235,130'])});
+    }
   }else if(fire){
     /* ember particle stream */
     for(let i=0;i<5;i++){
@@ -1658,7 +1907,7 @@ function breathStep(t,now){
       b.plugin.burnAt=now+900;
     }
     if(!b.isStatic){
-      const pw=(fire?0.55:0.85)*(wide?1.8:1);
+      const pw=(fire?0.55:0.85)*(wide?1.8:1)*(t.spec.gust?1.7:1);
       Body.setVelocity(b,{x:b.velocity.x+aim.x*pw*f,y:b.velocity.y+aim.y*pw*f-0.08});
       Sleeping.set(b,false);
     }
@@ -2496,6 +2745,8 @@ function updateMilitary(now){
     p.x+=p.vx;p.y+=p.vy;p.life--;
     if(p.type==='shell')p.vy+=0.13;
     if(p.type==='venom')p.vy+=0.17;
+    if(p.type==='magma')p.vy+=0.19;
+    if(p.type==='geyser')p.vy+=0.15;
     if(p.type==='missile'){
       p.vy+=0.18;
       if(p.life<160)p.vx+=clamp((p.tx-p.x)*0.0025,-0.5,0.5);
@@ -2508,7 +2759,7 @@ function updateMilitary(now){
       if(t.dead)continue;
       if(Math.abs(p.x-t.torso.position.x)<t.D.torsoW*0.55&&
          Math.abs(p.y-t.torso.position.y)<t.bodyH*0.55){
-        applyDamage(t,p.type==='venom'?6:p.type==='missile'?4:p.type==='plasma'?4:p.type==='shell'?2.5:2);
+        applyDamage(t,p.type==='venom'?6:p.type==='magma'?6:p.type==='geyser'?5:p.type==='missile'?4:p.type==='plasma'?4:p.type==='shell'?2.5:2);
         boom=true;break;
       }
     }
@@ -2522,10 +2773,44 @@ function updateMilitary(now){
     if(boom){
       if(p.type==='venom'){
         venomSplash(p.x,p.y);
-      }else miniBoom(p.x,p.y,p.type==='missile'?60:p.type==='shell'?52:p.type==='plasma'?50:46,p.type==='missile'?2:0);
+      }else if(p.type==='geyser'){
+        geyserSplash(p.x,p.y);
+      }else miniBoom(p.x,p.y,
+        p.type==='missile'?60:p.type==='magma'?66:p.type==='shell'?52:p.type==='plasma'?50:46,
+        p.type==='missile'?2:p.type==='magma'?3:0);
       projs.splice(i,1);
     }
   }
+}
+function geyserSplash(x,y){
+  /* scalding water burst: heavy push, spray, no charring */
+  thudSnd(0.3);
+  for(let i=0;i<12;i++){
+    const a=rand(-Math.PI,0),sp=rand(0.8,4);
+    addP({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:randi(20,42),max:42,
+      size:rand(2.5,5),type:'ember',col:pick(['120,200,235','225,245,255'])});
+  }
+  for(let i=0;i<4;i++)
+    addP({x:x+rand(-10,10),y:y-4,vx:rand(-0.5,0.5),vy:rand(-1.4,-0.4),
+      life:randi(26,50),max:50,size:rand(8,15),type:'smoke'});
+  const pt={x,y};
+  for(const b of Composite.allBodies(world)){
+    if(b===groundBody)continue;
+    const d=dist(b.position,pt);
+    if(d<75&&b.plugin&&b.plugin.brick)wakeBrick(b);
+    if(d<75&&!b.isStatic){
+      const f=1-d/75;
+      const dv=Vector.normalise(Vector.sub(b.position,pt));
+      Body.setVelocity(b,{x:b.velocity.x+dv.x*4.5*f,y:b.velocity.y+dv.y*4.5*f-1*f});
+    }
+  }
+  for(const c of breakCons){
+    if(c.plugin.dead)continue;
+    const mid={x:(c.bodyA.position.x+c.bodyB.position.x)/2,y:(c.bodyA.position.y+c.bodyB.position.y)/2};
+    if(dist(mid,pt)<62&&Math.random()<0.6)sever(c,true);
+  }
+  for(const t of titans)
+    if(dist(t.torso.position,pt)<75+t.D.torsoW*0.4)applyDamage(t,4);
 }
 function venomSplash(x,y){
   thudSnd(0.25);
@@ -2638,14 +2923,19 @@ function drawMilitary(now){
       ctx.beginPath();ctx.ellipse(-3,0,12,3.2,0,0,TAU);ctx.fill();
       ctx.restore();
       ctx.globalCompositeOperation='source-over';
-    }else if(p.type==='venom'){
+    }else if(p.type==='venom'||p.type==='magma'||p.type==='geyser'){
       ctx.globalCompositeOperation='lighter';
-      const gr=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,9);
-      gr.addColorStop(0,'rgba(255,200,180,0.9)');
-      gr.addColorStop(0.4,'rgba(255,70,45,0.7)');
-      gr.addColorStop(1,'rgba(255,70,45,0)');
+      const [inC,midC,r2]=p.type==='magma'
+        ?['rgba(255,230,180,0.95)','255,120,30',11]
+        :p.type==='geyser'
+        ?['rgba(235,250,255,0.9)','120,200,235',9]
+        :['rgba(255,200,180,0.9)','255,70,45',9];
+      const gr=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r2);
+      gr.addColorStop(0,inC);
+      gr.addColorStop(0.4,`rgba(${midC},0.7)`);
+      gr.addColorStop(1,`rgba(${midC},0)`);
       ctx.fillStyle=gr;
-      ctx.beginPath();ctx.arc(p.x,p.y,9,0,TAU);ctx.fill();
+      ctx.beginPath();ctx.arc(p.x,p.y,r2,0,TAU);ctx.fill();
       ctx.globalCompositeOperation='source-over';
     }else{
       ctx.save();
@@ -3088,7 +3378,14 @@ function drawTitanReal(t,now){
   if(t.spec.wings&&SP.wings){
     ctx.save();
     ctx.translate(-D.torsoW*0.06,torsoY-D.torsoH*0.06);
-    ctx.rotate(Math.sin(now/430)*0.05-0.04);
+    if(t.spec.flyer){
+      /* powered flight: rapid wingbeats */
+      const flap=Math.sin(now/(t.spec.wingStyle==='insect'?55:120));
+      ctx.rotate(flap*0.10);
+      ctx.scale(1,0.72+0.28*Math.abs(flap));
+    }else{
+      ctx.rotate(Math.sin(now/430)*0.05-0.04);
+    }
     ctx.drawImage(SP.wings.c,-SP.wings.ax,-SP.wings.ay);
     ctx.restore();
   }
@@ -3107,11 +3404,12 @@ function drawTitanReal(t,now){
   /* limbs: swing around fixed hip/shoulder pivots — always a clean pose */
   const hipY=torsoY+D.torsoH*0.42;
   const shY=torsoY-D.torsoH*0.22;
-  const legAN=Math.sin(t.phase)*0.40*t.walk;
-  const legAF=Math.sin(t.phase+Math.PI)*0.40*t.walk;
+  const swingM=t.spec.flyer?0.35:1; /* airborne legs dangle, they don't stride */
+  const legAN=Math.sin(t.phase)*0.40*t.walk*swingM;
+  const legAF=Math.sin(t.phase+Math.PI)*0.40*t.walk*swingM;
   const strikeB=now-t.strikeT<220?1-(now-t.strikeT)/220:0;
-  const armAN=Math.sin(t.phase+Math.PI)*0.26*t.walk+Math.sin(now/700)*0.04-strikeB*1.1;
-  const armAF=Math.sin(t.phase)*0.26*t.walk+Math.sin(now/700+1.3)*0.04;
+  const armAN=Math.sin(t.phase+Math.PI)*0.26*t.walk*swingM+Math.sin(now/700)*0.04-strikeB*1.1;
+  const armAF=Math.sin(t.phase)*0.26*t.walk*swingM+Math.sin(now/700+1.3)*0.04;
   const limb=(px,py,ang,ay,spr,jr,sc)=>{
     ctx.fillStyle=pal.mid;
     ctx.beginPath();ctx.arc(px,py,jr,0,TAU);ctx.fill();
@@ -3210,7 +3508,7 @@ function drawTitanReal(t,now){
   if(breathing&&t.lastAim){
     const m=t.lastMouth,aim=t.lastAim;
     ctx.globalCompositeOperation='lighter';
-    if(t.spec.fire){
+    if(t.spec.fire||t.spec.frost||t.spec.prism){
       const wmul=t.ultWide?2.3:1;
       const len=470*S*(t.ultWide?1.3:1),glow=t.spec.beam||t.spec.glow;
       for(const [wdt,col] of [[26*S*wmul,`rgba(${glow},0.12)`],[13*S*wmul,`rgba(${glow},0.22)`],[5*S*wmul,'rgba(255,240,220,0.4)']]){
@@ -3231,12 +3529,14 @@ function drawTitanReal(t,now){
       ctx.beginPath();ctx.arc(m.x,m.y,30*S,0,TAU);ctx.fill();
     }else if(t.spec.lightning||t.spec.plasma){
       /* bolt visuals handled separately */
-    }else if(t.spec.venom){
+    }else if(t.spec.venom||t.spec.magma||t.spec.geyser){
       /* mouth glow while spitting */
       ctx.globalCompositeOperation='lighter';
+      const bc=t.spec.beam||'255,70,45';
       const gr=ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,26*S);
-      gr.addColorStop(0,'rgba(255,180,160,0.7)');
-      gr.addColorStop(1,'rgba(255,70,45,0)');
+      gr.addColorStop(0,'rgba(255,235,220,0.7)');
+      gr.addColorStop(0.5,`rgba(${bc},0.55)`);
+      gr.addColorStop(1,`rgba(${bc},0)`);
       ctx.fillStyle=gr;
       ctx.beginPath();ctx.arc(m.x,m.y,26*S,0,TAU);ctx.fill();
     }else{
@@ -3256,8 +3556,9 @@ function drawTitanReal(t,now){
     ctx.globalCompositeOperation='lighter';
     for(const bolt of t.bolts){
       const a=bolt.life/9;
-      for(const [wd,col] of [[7,`rgba(255,205,80,${(a*0.25).toFixed(3)})`],
-                             [2.5,`rgba(255,240,190,${(a*0.9).toFixed(3)})`]]){
+      const bc=bolt.col||'255,205,80';
+      for(const [wd,col] of [[7,`rgba(${bc},${(a*0.25).toFixed(3)})`],
+                             [2.5,`rgba(255,250,235,${(a*0.9).toFixed(3)})`]]){
         ctx.strokeStyle=col;ctx.lineWidth=wd;ctx.lineJoin='round';
         ctx.beginPath();
         ctx.moveTo(bolt.pts[0].x,bolt.pts[0].y);
@@ -3385,7 +3686,8 @@ function loadLevel(i){
     spawnBoat(W*rand(L.water+0.06,0.95));
   /* higher levels: a wild kaiju may crash the party */
   if(i>=2&&titans.length<3&&Math.random()<Math.min(0.25+i*0.08,0.8)){
-    const wt=spawnTitan(Math.random()<0.5?150:W-150,pick(['titan','ape','drax','scorn','mecha','hydrax','vang']));
+    const wt=spawnTitan(Math.random()<0.5?150:W-150,
+      pick(['titan','ape','drax','scorn','mecha','hydrax','vang','sky','lum','fen','kru','mag','umb']));
     if(wt){wt.hostile=true;toast('A wild '+wt.spec.label+' appears!');}
   }
   banner='LEVEL '+(i+1);bannerSub=L.name;bannerT=170;
@@ -3418,13 +3720,17 @@ document.querySelectorAll('#panel button[data-tool]').forEach(btn=>{
     btn.classList.add('active');
   });
 });
+const STORE_IDS={hydrax:['shopHydrax','btnHydrax'],vang:['shopVang','btnVang'],
+  sky:['shopSky','btnSky'],lum:['shopLum','btnLum'],fen:['shopFen','btnFen'],
+  kru:['shopKru','btnKru'],mag:['shopMag','btnMag'],umb:['shopUmb','btnUmb']};
 function updateStoreUI(){
   const cc=document.getElementById('coinCount');
   if(cc)cc.textContent=coins.toLocaleString();
-  for(const key of ['hydrax','vang']){
+  for(const key in PRICES){
     const btn=document.querySelector(`.buyBtn[data-key="${key}"]`);
-    const item=document.getElementById(key==='hydrax'?'shopHydrax':'shopVang');
-    const pbtn=document.getElementById(key==='hydrax'?'btnHydrax':'btnVang');
+    const item=document.getElementById(STORE_IDS[key][0]);
+    const pbtn=document.getElementById(STORE_IDS[key][1]);
+    if(!btn||!item)continue;
     if(OWN[key]){
       btn.textContent='OWNED';btn.disabled=true;btn.classList.add('owned');
       item.classList.add('owned');
@@ -3454,8 +3760,8 @@ document.querySelectorAll('.buyBtn').forEach(b=>{
     coins-=PRICES[key];
     localStorage.setItem('ts_coins',String(coins));
     OWN[key]=true;
-    localStorage.setItem('ts_own_'+(key==='hydrax'?'hydrax':'vang'),'1');
-    toast((key==='hydrax'?'HYDRAX':'VANGUARD')+' unlocked!');
+    localStorage.setItem('ts_own_'+key,'1');
+    toast(SPECIES[key].label.toUpperCase()+' unlocked!');
     updateStoreUI();
   });
 });
@@ -3594,13 +3900,9 @@ cv.addEventListener('pointerdown',e=>{
   else if(tool==='drax')spawnTitan(clamp(p.x,120,W-120),'drax');
   else if(tool==='scorn')spawnTitan(clamp(p.x,120,W-120),'scorn');
   else if(tool==='mecha')spawnTitan(clamp(p.x,120,W-120),'mecha');
-  else if(tool==='hydrax'){
-    if(OWN.hydrax)spawnTitan(clamp(p.x,120,W-120),'hydrax');
-    else{openStore();toast('Hydrax must be purchased first');}
-  }
-  else if(tool==='vang'){
-    if(OWN.vang)spawnTitan(clamp(p.x,120,W-120),'vang');
-    else{openStore();toast('Vanguard must be purchased first');}
+  else if(PRICES[tool]!==undefined){
+    if(OWN[tool])spawnTitan(clamp(p.x,120,W-120),tool);
+    else{openStore();toast(SPECIES[tool].label+' must be purchased first');}
   }
   else if(tool==='nuke')spawnNuke(p.x);
   else if(tool==='building')spawnBuilding(p.x);

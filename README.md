@@ -27,14 +27,24 @@ buildings with his breath.
 - **Crumbling buildings** — each building is a grid of individual physics
   bricks joined by breakable constraints; every brick renders its slice of the
   facade (windows, cornices, doorway), so debris looks architectural. Bricks
-  char dark when burned. Buildings crumble progressively and never despawn.
+  char dark when burned, and settled rubble fades away to keep the streets
+  clear.
+- **Five levels** — Outskirts, Old Town, Downtown Dusk, Midnight Harbor
+  (stars, moon, lit windows), and Metropolis Dawn, each with its own sky
+  palette and city layout. Level the whole city and the next level rolls in
+  automatically.
 - **Tools** — Grab (drag & fling anything), three kaiju spawners (max 3 on
   screen), Building spawn, Bomb (3-second fuse ring, radial blast, screen
   shake, synthesized WebAudio boom), **A-Bomb** (falling warhead, screen-white
   flash, mushroom cloud, city-levelling blast radius), Breath/Roar (auto-aimed
   at the nearest block), Car spawn (kaiju bite and carry cars in their jaws),
-  Reset.
-- Works with mouse and touch. No build step, no backend — one static file.
+  Reset. The breath is aimed: tap where you want the beam and hold-drag to
+  sweep it. The Titan fires an atomic-blue beam, Ravok a crimson one, and
+  Goliath a concussive shockwave roar.
+- Works with mouse and touch, sized for tablets, and installable as an app
+  (PWA manifest + service worker — open the site and use "Add to Home
+  Screen" / the install prompt; it also works offline after the first
+  visit).
 
 ## Running locally
 

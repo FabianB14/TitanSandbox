@@ -1162,8 +1162,9 @@ function setFacing(t,f){
 }
 function mouthPos(t){
   const D=t.D;
-  const lx=t.facing*(30*D.s+D.headW*0.42);
-  const ly=-t.bodyH/2-D.headH*0.5+8*D.s+D.headH*0.2;
+  /* the open mouth: level with the jaw line, not the snout */
+  const lx=t.facing*(30*D.s+D.headW*0.34);
+  const ly=-t.bodyH/2-D.headH*0.5+8*D.s+D.headH*0.55;
   return Vector.add(t.torso.position,rot(t.torso.angle,{x:lx,y:ly}));
 }
 function nudge(b,target,k,max,damp){

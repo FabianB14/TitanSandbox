@@ -630,76 +630,31 @@ function buildAllKaiju(){
 function spawnTitan(x,key){
   key=key||'titan';
   if(titans.length>=3){toast('Max 3 kaiju');return null;}
-  const spec=SPECIES[key],D=DIMS[key],s=D.s,gr=nextGroup--;
-  const opt=(d,extra)=>Object.assign({density:d,friction:0.85,frictionAir:0.018,restitution:0,
-    collisionFilter:{group:gr},chamfer:{radius:8*s}},extra||{});
-  const ty=groundY-D.standH;
+  const spec=SPECIES[key],D=DIMS[key];
+  const bodyH=D.standH+D.torsoH/2;
   const t={facing:1,phase:0,walk:0,staggerUntil:0,breathUntil:0,breathTarget:null,grabbed:false,
-    bite:null,biteCd:0,group:gr,flipCd:0,active:true,spec:spec,D:D,SP:SPRS[key]};
-  t.torso=Bodies.rectangle(x,ty,D.torsoW,D.torsoH,opt(0.004));
-  t.head=Bodies.rectangle(x+30*s,ty-D.torsoH/2-D.headH/2-2*s,D.headW*0.8,D.headH*0.85,opt(0.0016));
-  t.jaw=Bodies.rectangle(x+44*s,ty-D.torsoH/2+8*s,D.jawW*0.85,D.jawH,opt(0.0009));
-  t.armN=Bodies.rectangle(x+D.torsoW*0.38,ty-D.torsoH*0.24+D.armH*0.4,D.armW,D.armH,opt(0.0012));
-  t.armF=Bodies.rectangle(x+D.torsoW*0.20,ty-D.torsoH*0.24+D.armH*0.4,D.armW,D.armH,opt(0.0012));
-  t.legN=Bodies.rectangle(x+D.torsoW*0.24,groundY-D.legH/2,D.legW,D.legH,opt(0.005));
-  t.legF=Bodies.rectangle(x+D.torsoW*0.03,groundY-D.legH/2,D.legW,D.legH,opt(0.005));
-  const tx0=x-D.torsoW*0.42;
-  t.tail1=Bodies.rectangle(tx0-D.tail[0][0]*0.5,ty+D.torsoH*0.30,D.tail[0][0],D.tail[0][1],opt(0.003));
-  t.tail2=Bodies.rectangle(tx0-D.tail[0][0]-D.tail[1][0]*0.4,ty+D.torsoH*0.38,D.tail[1][0],D.tail[1][1],opt(0.0022));
-  t.tail3=Bodies.rectangle(tx0-D.tail[0][0]-D.tail[1][0]-D.tail[2][0]*0.3,ty+D.torsoH*0.44,D.tail[2][0],D.tail[2][1],opt(0.0016));
-  t.parts=[t.torso,t.head,t.jaw,t.armN,t.armF,t.legN,t.legF,t.tail1,t.tail2,t.tail3];
-  t.joints=[];
-  const con=(A,B,ax,ay,bx,by,st,len,damp)=>{
-    const c=Constraint.create({bodyA:A,bodyB:B,pointA:{x:ax,y:ay},pointB:{x:bx,y:by},
-      stiffness:st,length:len||0,damping:damp!==undefined?damp:0.12});
-    c.plugin={baseA:{x:ax,y:ay},baseB:{x:bx,y:by}};
-    t.joints.push(c);Composite.add(world,c);return c;
-  };
-  const tw=D.torsoW,th=D.torsoH,hw=D.headW,hh=D.headH,jw=D.jawW,ah=D.armH,lh=D.legH;
-  /* neck (paired) */
-  con(t.torso,t.head,14*s,-th*0.50,-hw*0.30,hh*0.62,0.9);
-  con(t.torso,t.head,36*s,-th*0.44,-hw*0.04,hh*0.70,0.30);
-  /* jaw hinge + closing spring */
-  con(t.head,t.jaw,-hw*0.16,hh*0.36,-jw*0.42,0,0.9);
-  t.jawSpring=con(t.head,t.jaw,hw*0.26,hh*0.30,jw*0.22,-2*s,0.10,2*s);
-  /* arms (paired) */
-  con(t.torso,t.armN,tw*0.38,-th*0.22,0,-ah*0.42,0.9);
-  con(t.torso,t.armN,tw*0.44,-th*0.14,6*s,-ah*0.30,0.18);
-  con(t.torso,t.armF,tw*0.20,-th*0.24,0,-ah*0.42,0.9);
-  con(t.torso,t.armF,tw*0.26,-th*0.16,6*s,-ah*0.30,0.18);
-  /* hips (paired) — anchored forward so the COM sits over the feet */
-  con(t.torso,t.legN,tw*0.24,th*0.42,0,-lh*0.44,0.9);
-  con(t.torso,t.legN,tw*0.34,th*0.34,8*s,-lh*0.34,0.22);
-  con(t.torso,t.legF,tw*0.03,th*0.42,0,-lh*0.44,0.9);
-  con(t.torso,t.legF,tw*0.13,th*0.34,8*s,-lh*0.34,0.22);
-  /* tail chain (paired) */
-  const tl=D.tail;
-  con(t.torso,t.tail1,-tw*0.42,th*0.26,tl[0][0]*0.42,-4*s,0.9);
-  con(t.torso,t.tail1,-tw*0.34,th*0.38,tl[0][0]*0.34,8*s,0.28);
-  con(t.tail1,t.tail2,-tl[0][0]*0.44,0,tl[1][0]*0.42,-3*s,0.9);
-  con(t.tail1,t.tail2,-tl[0][0]*0.36,8*s,tl[1][0]*0.34,6*s,0.26);
-  con(t.tail2,t.tail3,-tl[1][0]*0.44,0,tl[2][0]*0.40,-2*s,0.9);
-  con(t.tail2,t.tail3,-tl[1][0]*0.36,6*s,tl[2][0]*0.32,5*s,0.24);
-  for(const p of t.parts){
-    p.plugin={titan:t,titanPart:true};
-    p.sleepThreshold=Infinity;
-  }
-  t.legN.plugin.isLeg=true;t.legF.plugin.isLeg=true;
-  t.jaw.plugin.isJaw=true;
-  Composite.add(world,t.parts);
+    bite:null,biteCd:0,flipCd:0,active:true,jawOpen:0,aimTilt:0,
+    spec:spec,D:D,SP:SPRS[key],bodyH:bodyH};
+  const b=Bodies.rectangle(x,groundY-bodyH/2,D.torsoW*0.95,bodyH,
+    {density:0.0045,friction:0.9,frictionStatic:1,frictionAir:0.02,restitution:0,
+     chamfer:{radius:10*D.s},label:'titan'});
+  b.plugin={titan:t,titanPart:true};
+  b.sleepThreshold=Infinity;
+  t.torso=b;t.parts=[b];
+  Composite.add(world,b);
   titans.push(t);
   return t;
 }
 function setFacing(t,f){
   if(t.facing===f)return;
   t.facing=f;
-  for(const c of t.joints){
-    c.pointA.x=c.plugin.baseA.x*f;
-    c.pointB.x=c.plugin.baseB.x*f;
-  }
+  releaseBite(t);
 }
 function mouthPos(t){
-  return Vector.add(t.head.position,rot(t.head.angle,{x:t.facing*t.D.headW*0.42,y:t.D.headH*0.22}));
+  const D=t.D;
+  const lx=t.facing*(30*D.s+D.headW*0.42);
+  const ly=-t.bodyH/2-D.headH*0.5+8*D.s+D.headH*0.2;
+  return Vector.add(t.torso.position,rot(t.torso.angle,{x:lx,y:ly}));
 }
 function nudge(b,target,k,max,damp){
   const d=damp!==undefined?damp:0.90;
@@ -716,31 +671,25 @@ function nearestTargetX(t){
   }
   return best;
 }
-const MUS={upright:1,height:1,legs:1,head:1,walk:1,tail:1,arms:1,legAng:1};
-window.MUS=MUS;
 function muscles(t,now){
-  const torso=t.torso;
+  const body=t.torso,D=t.D;
   const wasActive=t.active;
-  t.active=!t.grabbed&&torso.speed<16&&now>t.staggerUntil;
-  if(!t.active){t.walk*=0.8;return;}
-  if(!wasActive)Sleeping.set(torso,false);
+  t.active=!t.grabbed&&body.speed<16&&now>t.staggerUntil;
+  if(!t.active){t.walk*=0.8;t.jawOpen*=0.9;return;}
+  if(!wasActive)Sleeping.set(body,false);
   const breathing=now<t.breathUntil;
-  /* upright correction at the position level (velocity-level torque fights
-     the stiff joints and leaks sideways momentum) — slight theropod lean */
-  if(MUS.upright){Body.setAngularVelocity(torso,torso.angularVelocity*0.80);
-  Body.setAngle(torso,torso.angle*0.93+t.facing*0.05*0.07);}
-  /* vertical PD spring toward stand height */
-  const standY=groundY-t.D.standH;
-  const dy=standY-torso.position.y;
-  const lift=clamp(dy*0.045-torso.velocity.y*0.18,-1.6,1.3);
-  if(MUS.height)Body.setVelocity(torso,{x:torso.velocity.x,y:torso.velocity.y+lift});
-  /* pick a direction: stomp toward nearest building */
+  /* rigid uprighting: the whole kaiju rights itself like a toy, no ragdoll */
+  Body.setAngularVelocity(body,body.angularVelocity*0.80);
+  Body.setAngle(body,body.angle*0.90);
+  if(Math.abs(body.angle)>0.5)
+    Body.setVelocity(body,{x:body.velocity.x,y:body.velocity.y-0.5});
+  /* stomp toward the nearest building */
   let dir=0;
   if(!breathing){
     const bx=nearestTargetX(t);
     if(bx!==null){
-      const dx=bx-torso.position.x;
-      if(Math.abs(dx)>t.D.torsoW*0.85)dir=Math.sign(dx);
+      const dx=bx-body.position.x;
+      if(Math.abs(dx)>D.torsoW*0.85)dir=Math.sign(dx);
     }
   }
   if(dir!==0&&dir!==t.facing){
@@ -748,57 +697,35 @@ function muscles(t,now){
     else dir=0;
   }
   const wantVx=dir*t.spec.walk*S;
-  const vxAdj=dir===0?torso.velocity.x*0.9:torso.velocity.x+clamp(wantVx-torso.velocity.x,-0.30,0.30);
-  if(MUS.walk)Body.setVelocity(torso,{x:vxAdj,y:torso.velocity.y});
-  if(dir!==0){t.phase+=0.058;t.walk=Math.min(1,t.walk+0.05);}
-  else t.walk*=0.92;
-  /* head held above shoulders — target measured from the real neck anchor
-     so muscles agree with the joint geometry and don't leak momentum */
-  const neckW=Vector.add(torso.position,rot(torso.angle,{x:t.facing*14*S,y:-t.D.torsoH*0.46}));
-  const htp=Vector.add(neckW,rot(torso.angle,{x:t.facing*30*S,y:-22*S}));
-  if(MUS.head){nudge(t.head,htp,0.016,1.2);
-  Body.setAngularVelocity(t.head,t.head.angularVelocity*0.80);
-  Body.setAngle(t.head,t.head.angle*0.93+torso.angle*0.5*0.07);}
-  /* gait: the stiff hip joints keep feet under hips; the muscle only
-     hops the swing leg up-and-forward, so ground friction stays honest */
-  [t.legN,t.legF].forEach((leg,i)=>{
-    const ph=t.phase+i*Math.PI;
-    const swing=Math.max(0,Math.cos(ph));
-    if(MUS.legs&&t.walk>0.05&&swing>0.3){
-      Body.setVelocity(leg,{x:leg.velocity.x+t.facing*0.22*t.walk,
-                            y:leg.velocity.y-0.55*swing*t.walk});
+  const vx=dir===0?body.velocity.x*0.9:body.velocity.x+clamp(wantVx-body.velocity.x,-0.3,0.3);
+  Body.setVelocity(body,{x:vx,y:body.velocity.y});
+  if(dir!==0){
+    const prev=t.phase;
+    t.phase+=0.065;t.walk=Math.min(1,t.walk+0.05);
+    /* footfall: dust, thud, a little physical stomp-hop */
+    if(Math.floor(prev/Math.PI)!==Math.floor(t.phase/Math.PI)){
+      dustPuff(body.position.x+t.facing*D.torsoW*0.3,groundY-4,3);
+      thudSnd(0.3);shake=Math.max(shake,2.4);
+      Body.setVelocity(body,{x:body.velocity.x,y:body.velocity.y-0.9});
     }
-    if(MUS.legAng)Body.setAngularVelocity(leg,leg.angularVelocity*0.85);
-    /* stomp dust on footfall */
-    if(t.walk>0.5&&Math.cos(ph)<-0.96&&leg.position.y>groundY-t.D.legH*0.56){
-      dustPuff(leg.position.x+t.facing*t.D.legW*0.4,groundY-4,3);
-      thudSnd(0.28);shake=Math.max(shake,2.2);
+  }else t.walk*=0.92;
+  /* jaw animation */
+  const jt=breathing?0.5:(t.bite?0.30:0.05);
+  t.jawOpen+=(jt-t.jawOpen)*0.15;
+  /* bite a car that drifts near the mouth */
+  if(!t.bite&&!breathing&&now>t.biteCd){
+    const m=mouthPos(t);
+    for(const c of cars){
+      if(c.plugin.gone||c.plugin.bittenBy)continue;
+      if(dist(m,c.position)<48*S){tryBite(t,c);break;}
     }
-  });
-  /* tail: soft droop, keep it from whipping */
-  if(MUS.tail){
-    const tl=t.D.tail;
-    const off=[t.D.torsoW*0.42+tl[0][0]*0.45,
-               t.D.torsoW*0.42+tl[0][0]*0.9+tl[1][0]*0.45,
-               t.D.torsoW*0.42+tl[0][0]*0.9+tl[1][0]*0.9+tl[2][0]*0.45];
-    [t.tail1,t.tail2,t.tail3].forEach((tb,i)=>{
-      const tgt={x:torso.position.x-t.facing*off[i],
-                 y:groundY-t.D.tail[i][1]*0.5-(2-i)*16*S};
-      nudge(tb,tgt,0.012,0.7,0.96);
-      Body.setAngularVelocity(tb,tb.angularVelocity*0.90);
-    });
   }
-  /* arms tuck slightly forward */
-  if(MUS.arms)[t.armN,t.armF].forEach(a=>{
-    Body.setAngularVelocity(a,a.angularVelocity*0.88-(a.angle-t.facing*0.25)*0.02);
-  });
 }
 function removeTitan(t){
   releaseBite(t);
-  for(const c of t.joints)Composite.remove(world,c);
-  for(const p of t.parts)Composite.remove(world,p);
+  Composite.remove(world,t.torso);
   titans=titans.filter(x=>x!==t);
-  if(grab&&grab.body&&grab.body.plugin&&grab.body.plugin.titan===t)releaseGrab();
+  if(grab&&grab.body===t.torso)releaseGrab();
 }
 
 /* ============================================================
@@ -835,13 +762,10 @@ function triggerBreath(clickP){
   roarSnd();
 }
 function breathStep(t,now){
-  if(now>=t.breathUntil){
-    if(t.jawSpring.length>3*S)t.jawSpring.length=2*S;
-    return;
-  }
-  t.jawSpring.length=26*S;
+  if(now>=t.breathUntil){t.aimTilt*=0.9;return;}
   const m=mouthPos(t);
   const aim=Vector.normalise(Vector.sub(t.breathTarget,m));
+  t.aimTilt=clamp(Math.atan2(aim.y,t.facing*aim.x),-0.45,0.45);
   const range=540*S;
   const fire=t.spec.fire;
   shake=Math.max(shake,fire?1.6:2.4);
@@ -1176,6 +1100,8 @@ function nukeExplode(x,y){
       const fq=1-d/R;
       const dv=Vector.normalise(Vector.sub(b.position,pt));
       Body.setVelocity(b,{x:b.velocity.x+dv.x*26*fq,y:b.velocity.y+dv.y*26*fq-6*fq});
+      if(b.plugin&&b.plugin.titanPart)
+        Body.setAngularVelocity(b,b.angularVelocity+(Math.random()-0.5)*0.6*fq);
       Sleeping.set(b,false);
     }
   }
@@ -1244,6 +1170,8 @@ function explode(x,y,R,power){
       const f=1-d/R;
       const dv=Vector.normalise(Vector.sub(b.position,pt));
       Body.setVelocity(b,{x:b.velocity.x+dv.x*power*f,y:b.velocity.y+dv.y*power*f-3.2*f});
+      if(b.plugin&&b.plugin.titanPart)
+        Body.setAngularVelocity(b,b.angularVelocity+(Math.random()-0.5)*0.4*f);
       Sleeping.set(b,false);
     }
   }
@@ -1271,14 +1199,13 @@ function tryBite(t,car){
   const now=performance.now();
   if(t.bite||now<t.biteCd||now<t.breathUntil||!t.active)return;
   if(car.plugin.bittenBy)return;
-  const cons=Constraint.create({bodyA:t.jaw,bodyB:car,
-    pointA:{x:t.facing*t.D.jawW*0.28,y:0},pointB:{x:0,y:0},
-    length:4,stiffness:0.18,damping:0.08});
+  const m=mouthPos(t);
+  const local=rot(-t.torso.angle,Vector.sub(m,t.torso.position));
+  const cons=Constraint.create({bodyA:t.torso,bodyB:car,
+    pointA:local,pointB:{x:0,y:0},length:6,stiffness:0.15,damping:0.08});
   Composite.add(world,cons);
   t.bite={cons,car};
   car.plugin.bittenBy=t;
-  t.jawSpring.length=14*S;
-  setTimeout(()=>{if(!t.bite)t.jawSpring.length=2*S;},400);
 }
 
 /* ============================================================
@@ -1299,12 +1226,6 @@ Matter.Events.on(engine,'collisionStart',e=>{
       if(p.brick&&b.isStatic){
         if((po&&po.titanPart&&rel>1.3)||(!o.isStatic&&rel>3.2))wakeBrick(b);
       }
-      /* stomp thud + dust */
-      if(p.isLeg&&o===groundBody&&rel>3){
-        dustPuff(b.position.x,groundY-4,4);thudSnd(0.35);
-      }
-      /* jaw bites cars */
-      if(p.isJaw&&po&&po.car)tryBite(p.titan,o);
       /* hard impact releases a bitten car */
       if(p.car&&p.bittenBy&&rel>9&&!(po&&po.titan===p.bittenBy)){
         releaseBite(p.bittenBy);
@@ -1558,65 +1479,97 @@ function drawBrick(b){
   ctx.restore();
 }
 function drawTitanReal(t,now){
-  const f=t.facing,D=t.D,SP=t.SP,pal=t.spec.pal;
-  const anchor=(b,dx,dy)=>Vector.add(b.position,rot(b.angle,{x:f*dx,y:dy}));
-  const join=(a,b,wd)=>{
-    ctx.lineCap='round';
-    ctx.strokeStyle=pal.deep;ctx.lineWidth=wd;
-    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
-    ctx.strokeStyle=pal.mid;ctx.lineWidth=wd*0.72;
-    ctx.beginPath();ctx.moveTo(a.x-2*S,a.y-3*S);ctx.lineTo(b.x-2*S,b.y-3*S);ctx.stroke();
+  const f=t.facing,D=t.D,SP=t.SP,pal=t.spec.pal,s=D.s;
+  const body=t.torso,breathing=now<t.breathUntil;
+  const torsoY=-t.bodyH/2+D.torsoH/2;
+  /* soft contact shadow */
+  if(Math.abs(body.position.y+t.bodyH/2-groundY)<40&&Math.abs(body.angle)<0.6){
+    ctx.fillStyle='rgba(20,16,14,0.16)';
+    ctx.beginPath();
+    ctx.ellipse(body.position.x,groundY-3,D.torsoW*0.85,9*s,0,0,TAU);
+    ctx.fill();
+  }
+  ctx.save();
+  ctx.translate(body.position.x,body.position.y);
+  ctx.rotate(body.angle);
+  ctx.scale(f,1);
+  ctx.translate(0,-Math.abs(Math.sin(t.phase))*5*s*t.walk);
+  const dp=(spr,px,py)=>{ctx.save();ctx.translate(px,py);ctx.drawImage(spr.c,-spr.ax,-spr.ay);ctx.restore();};
+  /* tail: kinematic chain curving down behind */
+  ctx.save();
+  ctx.translate(-D.torsoW*0.40,torsoY+D.torsoH*0.24);
+  const tailSpr=[SP.tail0,SP.tail1,SP.tail2];
+  for(let i=0;i<3;i++){
+    ctx.rotate(-(0.07+0.09*i)
+      +Math.sin(now/520+i*0.7)*0.05
+      +Math.sin(t.phase-i*0.5)*0.06*t.walk);
+    dp(tailSpr[i],-D.tail[i][0]*0.42,0);
+    ctx.translate(-D.tail[i][0]*0.84,0);
+  }
+  ctx.restore();
+  /* limbs: swing around fixed hip/shoulder pivots — always a clean pose */
+  const hipY=torsoY+D.torsoH*0.42;
+  const shY=torsoY-D.torsoH*0.22;
+  const legAN=Math.sin(t.phase)*0.40*t.walk;
+  const legAF=Math.sin(t.phase+Math.PI)*0.40*t.walk;
+  const armAN=Math.sin(t.phase+Math.PI)*0.26*t.walk+Math.sin(now/700)*0.04;
+  const armAF=Math.sin(t.phase)*0.26*t.walk+Math.sin(now/700+1.3)*0.04;
+  const limb=(px,py,ang,ay,spr,jr)=>{
+    ctx.fillStyle=pal.mid;
+    ctx.beginPath();ctx.arc(px,py,jr,0,TAU);ctx.fill();
+    ctx.save();
+    ctx.translate(px,py);ctx.rotate(ang);
+    dp(spr,0,ay);
+    ctx.restore();
   };
-  /* tail: joins first so segments read as one continuous tail */
-  join(anchor(t.tail2,-D.tail[1][0]*0.30,0),anchor(t.tail3,D.tail[2][0]*0.30,0),D.tail[2][1]*0.95);
-  join(anchor(t.tail1,-D.tail[0][0]*0.30,0),anchor(t.tail2,D.tail[1][0]*0.30,0),D.tail[1][1]*0.95);
-  join(anchor(t.torso,-D.torsoW*0.40,D.torsoH*0.26),anchor(t.tail1,D.tail[0][0]*0.30,0),D.tail[0][1]*0.95);
-  drawSprite(t.tail3,SP.tail2,f);
-  drawSprite(t.tail2,SP.tail1,f);
-  drawSprite(t.tail1,SP.tail0,f);
-  /* far limbs, blended into the torso with shoulder/hip flesh */
-  join(anchor(t.torso,D.torsoW*0.20,-D.torsoH*0.20),anchor(t.armF,0,-D.armH*0.34),D.armW*0.85);
-  drawSprite(t.armF,SP.armFar,f);
-  join(anchor(t.torso,D.torsoW*0.03,D.torsoH*0.36),anchor(t.legF,0,-D.legH*0.30),D.legW*0.85);
-  drawSprite(t.legF,SP.legFar,f);
-  drawSprite(t.torso,SP.torso,f);
-  join(anchor(t.torso,D.torsoW*0.24,D.torsoH*0.36),anchor(t.legN,0,-D.legH*0.30),D.legW*0.9);
-  drawSprite(t.legN,SP.leg,f);
-  join(anchor(t.torso,D.torsoW*0.36,-D.torsoH*0.18),anchor(t.armN,0,-D.armH*0.34),D.armW*0.9);
-  drawSprite(t.armN,SP.arm,f);
-  /* painted neck bridging torso and head */
-  const nA=anchor(t.torso,16*S,-D.torsoH*0.36);
-  const nB=Vector.add(t.head.position,rot(t.head.angle,{x:-f*D.headW*0.22,y:D.headH*0.22}));
+  limb(D.torsoW*0.16,shY,armAF,D.armH*0.36,SP.armFar,D.armW*0.42);
+  limb(D.torsoW*0.01,hipY,legAF,D.legH*0.40,SP.legFar,D.legW*0.44);
+  dp(SP.torso,0,torsoY);
+  limb(D.torsoW*0.20,hipY,legAN,D.legH*0.40,SP.leg,D.legW*0.46);
+  limb(D.torsoW*0.34,shY,armAN,D.armH*0.36,SP.arm,D.armW*0.44);
+  /* painted neck */
+  const headX=30*s,headY=torsoY-D.torsoH*0.5-D.headH*0.5+8*s;
+  const nAx=12*s,nAy=torsoY-D.torsoH*0.34;
+  const nBx=headX-D.headW*0.20,nBy=headY+D.headH*0.25;
   ctx.lineCap='round';
-  ctx.strokeStyle=pal.deep;ctx.lineWidth=46*D.s;
-  ctx.beginPath();ctx.moveTo(nA.x,nA.y);ctx.lineTo(nB.x,nB.y);ctx.stroke();
-  ctx.strokeStyle=pal.mid;ctx.lineWidth=38*D.s;
-  ctx.beginPath();ctx.moveTo(nA.x-2*S,nA.y-4*S);ctx.lineTo(nB.x-2*S,nB.y-4*S);ctx.stroke();
-  ctx.strokeStyle=pal.top;ctx.lineWidth=18*D.s;
-  ctx.beginPath();ctx.moveTo(nA.x-4*S,nA.y-9*S);ctx.lineTo(nB.x-3*S,nB.y-8*S);ctx.stroke();
-  drawSprite(t.jaw,SP.jaw,f);
-  drawSprite(t.head,SP.head,f);
-  /* living ember glow pulsing along the spine (species with glow only) */
-  const breathing=now<t.breathUntil;
+  ctx.strokeStyle=pal.deep;ctx.lineWidth=46*s;
+  ctx.beginPath();ctx.moveTo(nAx,nAy);ctx.lineTo(nBx,nBy);ctx.stroke();
+  ctx.strokeStyle=pal.mid;ctx.lineWidth=38*s;
+  ctx.beginPath();ctx.moveTo(nAx-2*s,nAy-4*s);ctx.lineTo(nBx-2*s,nBy-4*s);ctx.stroke();
+  ctx.strokeStyle=pal.top;ctx.lineWidth=18*s;
+  ctx.beginPath();ctx.moveTo(nAx-4*s,nAy-9*s);ctx.lineTo(nBx-3*s,nBy-8*s);ctx.stroke();
+  /* head group: bob + aim tilt, jaw hinges inside it */
+  const headAng=Math.sin(t.phase+0.6)*0.05*t.walk+t.aimTilt*(breathing?1:0.25);
+  ctx.save();
+  ctx.translate(headX,headY);
+  ctx.rotate(headAng);
+  ctx.save();
+  ctx.translate(-D.headW*0.16,D.headH*0.36);
+  ctx.rotate(t.jawOpen);
+  dp(SP.jaw,D.jawW*0.34,5*s);
+  ctx.restore();
+  dp(SP.head,0,0);
+  ctx.restore();
+  /* living glow along the spine */
   if(t.spec.glow){
     const pulse=0.05+0.035*Math.sin(now/240)+(breathing?0.10:0);
     ctx.globalCompositeOperation='lighter';
-    const spinePts=[
-      anchor(t.torso,-D.torsoW*0.45,-D.torsoH*0.25),
-      anchor(t.torso,-D.torsoW*0.48,D.torsoH*0.05),
-      Vector.add(t.tail1.position,rot(t.tail1.angle,{x:0,y:-D.tail[0][1]*0.5})),
-      Vector.add(t.tail2.position,rot(t.tail2.angle,{x:0,y:-D.tail[1][1]*0.5}))
+    const pts=[
+      {x:-D.torsoW*0.45,y:torsoY-D.torsoH*0.25},
+      {x:-D.torsoW*0.48,y:torsoY+D.torsoH*0.05},
+      {x:-D.torsoW*0.70,y:torsoY+D.torsoH*0.32}
     ];
-    for(const p of spinePts){
-      const gr=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,34*D.s);
+    for(const p of pts){
+      const gr=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,34*s);
       gr.addColorStop(0,`rgba(${t.spec.glow},${pulse.toFixed(3)})`);
       gr.addColorStop(1,`rgba(${t.spec.glow},0)`);
       ctx.fillStyle=gr;
-      ctx.beginPath();ctx.arc(p.x,p.y,34*D.s,0,TAU);ctx.fill();
+      ctx.beginPath();ctx.arc(p.x,p.y,34*s,0,TAU);ctx.fill();
     }
     ctx.globalCompositeOperation='source-over';
   }
-  /* breath visuals */
+  ctx.restore();
+  /* breath visuals (world frame) */
   if(breathing&&t.lastAim){
     const m=t.lastMouth,aim=t.lastAim;
     ctx.globalCompositeOperation='lighter';
@@ -1639,7 +1592,6 @@ function drawTitanReal(t,now){
       ctx.fillStyle=gr;
       ctx.beginPath();ctx.arc(m.x,m.y,30*S,0,TAU);ctx.fill();
     }else{
-      /* concussive roar: expanding shock arcs from the mouth */
       const ang=Math.atan2(aim.y,aim.x);
       for(const off of [0,0.34,0.67]){
         const p2=((now/420)+off)%1;

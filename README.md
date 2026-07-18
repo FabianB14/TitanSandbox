@@ -13,11 +13,11 @@ buildings with his breath.
   parts, building facades, cars, sky, parallax skyline, lattice tower) is
   rendered to offscreen canvases at load time with layered gradients, speckle
   noise, and glow. No image files.
-- **Three original kaiju** — every one a 10-part physics ragdoll (torso,
-  head, hinged jaw, arms, legs, 3 tail segments) with a balance "muscle"
-  controller: they stand upright, stomp toward the nearest building, ragdoll
-  when thrown or blasted, then stagger back up. Painted flesh connectors
-  bridge every joint so they read as continuous creatures, not jointed dolls.
+- **Three original kaiju** — each is a single rigid physics body with a
+  fully procedural animation rig: legs, arms, tail chain, head, and jaw are
+  drawn kinematically (walk cycle, tail sway, head bob, jaw hinge), so poses
+  always look deliberate. They stomp toward the nearest building, tumble as
+  one piece when thrown or blasted, and right themselves like a toy.
   - **Titan** — charcoal theropod with ember-glowing bone fins and a fire
     breath.
   - **Goliath** — a giant fur-textured ape with long heavy arms and a

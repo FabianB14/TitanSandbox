@@ -77,6 +77,12 @@ buildings with his breath.
   vang; parts: torso, head, jaw, arm, leg, tail0-2, wings) and the game
   swaps them in over the generated art at load, inheriting the animation
   rig. Only ship art you have the rights to.
+- **Kaiju Forge** — the companion sprite studio at
+  https://fabianb14.github.io/kaiju-forge/ ([repo](https://github.com/FabianB14/kaiju-forge))
+  lets you paint or AI-generate parts on game-matched canvases, preview
+  them on the live animation rig, and send them straight into the game
+  with one tap (shared browser storage — both sites live on the same
+  domain). It can also export a `sprites.zip` for the folder method above.
 - **Tools** — Grab (drag & fling anything), three kaiju spawners (max 3 on
   screen), Building spawn, Bomb (3-second fuse ring, radial blast, screen
   shake, synthesized WebAudio boom), **A-Bomb** (falling warhead, screen-white

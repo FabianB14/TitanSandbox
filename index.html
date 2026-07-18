@@ -1115,25 +1115,46 @@ function buildAllKaiju(){
    Parts: torso, head, jaw, arm, leg, tail0, tail1, tail2, wings.
    Each image is stretched onto that part's canvas, so it inherits the
    rig's proportions and animation. Only use art you own the rights to. */
+function applyCustomSprite(key,part,img){
+  const SP=SPRS[key];
+  if(!SP||!SP[part])return false;
+  const base=SP[part];
+  const c=mkCanvas(base.c.width,base.c.height);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  SP[part]={c,ax:base.ax,ay:base.ay};
+  if(part==='arm')SP.armFar={c:darkVariant(c,0.30),ax:base.ax,ay:base.ay};
+  if(part==='leg')SP.legFar={c:darkVariant(c,0.32),ax:base.ax,ay:base.ay};
+  return true;
+}
 function loadCustomSprites(){
   const parts=['torso','head','jaw','arm','leg','tail0','tail1','tail2','wings'];
   for(const key in SPECIES){
     for(const part of parts){
       const img=new Image();
-      img.onload=()=>{
-        const SP=SPRS[key];
-        if(!SP||!SP[part])return;
-        const base=SP[part];
-        const c=mkCanvas(base.c.width,base.c.height);
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        SP[part]={c,ax:base.ax,ay:base.ay};
-        if(part==='arm')SP.armFar={c:darkVariant(c,0.30),ax:base.ax,ay:base.ay};
-        if(part==='leg')SP.legFar={c:darkVariant(c,0.32),ax:base.ax,ay:base.ay};
-      };
+      img.onload=()=>{applyCustomSprite(key,part,img);};
       img.onerror=()=>{};
       img.src='sprites/'+key+'_'+part+'.png';
     }
   }
+  /* Kaiju Forge hand-off: the companion editor at
+     https://fabianb14.github.io/kaiju-forge/ saves parts into shared
+     browser storage under 'ts_custom_sprites' (same domain as the game),
+     as a map of "<species>_<part>" -> PNG data URL. */
+  let map=null;
+  try{map=JSON.parse(localStorage.getItem('ts_custom_sprites')||'null');}catch(e){}
+  if(!map)return;
+  let n=0,pending=0,done=false;
+  const finish=()=>{if(done&&pending===0&&n>0)toast('Kaiju Forge skins loaded ('+n+')');};
+  for(const mk in map){
+    const m=/^(\w+?)_(torso|head|jaw|arm|leg|tail0|tail1|tail2|wings)$/.exec(mk);
+    if(!m||!SPRS[m[1]])continue;
+    const img=new Image();
+    pending++;
+    img.onload=()=>{if(applyCustomSprite(m[1],m[2],img))n++;pending--;finish();};
+    img.onerror=()=>{pending--;finish();};
+    img.src=map[mk];
+  }
+  done=true;finish();
 }
 
 function spawnTitan(x,key){
@@ -3843,7 +3864,8 @@ if('serviceWorker' in navigator){
 window.TS={engine,world,get titans(){return titans;},get buildings(){return buildings;},
   spawnTitan,spawnBuilding,spawnBomb,spawnCar,spawnNuke,explode,nukeExplode,triggerBreath,resetWorld,loadLevel,get LVL(){return LVL;},
   get groundY(){return groundY;},get T(){return DIMS.titan;},get DIMS(){return DIMS;},
-  SPECIES,get S(){return S;},get coins(){return coins;},award,OWN,spawnTank,spawnHeli,spawnJet,spawnShip,triggerUlt};
+  SPECIES,get S(){return S;},get coins(){return coins;},award,OWN,spawnTank,spawnHeli,spawnJet,spawnShip,triggerUlt,
+  get SPRS(){return SPRS;},loadCustomSprites};
 })();
 </script>
 </body>

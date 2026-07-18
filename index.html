@@ -422,23 +422,49 @@ function finRow(g,x0,x1,y,count,hMax,glow,cols){
     const fh=hMax*(0.45+0.55*env)*rand(0.85,1.1);
     const fw=hMax*0.44*(0.65+0.35*env);
     g.save();
-    if(glow){g.shadowColor=`rgba(${glow},0.8)`;g.shadowBlur=12;}
-    const gr=g.createLinearGradient(x,y-fh,x,y+2);
-    gr.addColorStop(0,cols[0]);gr.addColorStop(0.55,cols[1]);gr.addColorStop(1,cols[2]);
-    g.fillStyle=gr;
-    g.beginPath();
-    /* rounded crest: blunt curved lobe instead of a needle point */
-    g.moveTo(x-fw,y+3);
-    g.bezierCurveTo(x-fw*0.95,y-fh*0.50,x-fw*0.42,y-fh*1.02,x+fw*0.06,y-fh*0.94);
-    g.bezierCurveTo(x+fw*0.48,y-fh*0.84,x+fw*0.78,y-fh*0.30,x+fw,y+3);
-    g.closePath();g.fill();
+    g.translate(x,y);
+    drawFin(g,fw,fh,glow,cols);
     g.restore();
-    /* soft center rib */
-    g.strokeStyle='rgba(60,48,36,0.28)';g.lineWidth=0.9;
-    g.beginPath();
-    g.moveTo(x+fw*0.04,y-fh*0.88);
-    g.quadraticCurveTo(x-fw*0.02,y-fh*0.4,x+fw*0.02,y+2);
-    g.stroke();
+  }
+}
+/* one rounded fin at the origin, baseline y=0, pointing up (-y) */
+function drawFin(g,fw,fh,glow,cols){
+  g.save();
+  if(glow){g.shadowColor=`rgba(${glow},0.8)`;g.shadowBlur=12;}
+  const gr=g.createLinearGradient(0,-fh,0,2);
+  gr.addColorStop(0,cols[0]);gr.addColorStop(0.55,cols[1]);gr.addColorStop(1,cols[2]);
+  g.fillStyle=gr;
+  g.beginPath();
+  g.moveTo(-fw,3);
+  g.bezierCurveTo(-fw*0.95,-fh*0.50,-fw*0.42,-fh*1.02,fw*0.06,-fh*0.94);
+  g.bezierCurveTo(fw*0.48,-fh*0.84,fw*0.78,-fh*0.30,fw,3);
+  g.closePath();g.fill();
+  g.restore();
+  g.strokeStyle='rgba(60,48,36,0.28)';g.lineWidth=0.9;
+  g.beginPath();
+  g.moveTo(fw*0.04,-fh*0.88);
+  g.quadraticCurveTo(-fw*0.02,-fh*0.4,fw*0.02,2);
+  g.stroke();
+}
+/* fins along an ellipse arc: each sits ON the silhouette and points along
+   the local outward normal, so the row follows the body's curve */
+function finArc(g,ecx,ecy,rx,ry,a0,a1,count,hMax,glow,cols){
+  cols=cols||['#f6eeda','#ded2b5','#988c72'];
+  for(let i=0;i<count;i++){
+    const t=(i+0.5)/count;
+    const a=a0+(a1-a0)*t;
+    const px=ecx+rx*Math.cos(a),py=ecy+ry*Math.sin(a);
+    let nx=Math.cos(a)/rx,ny=Math.sin(a)/ry;
+    const nl=Math.hypot(nx,ny);nx/=nl;ny/=nl;
+    const th=Math.atan2(nx,-ny);
+    const env=0.5+0.5*Math.sin(t*Math.PI);
+    const fh=hMax*(0.45+0.55*env)*rand(0.9,1.1);
+    const fw=hMax*0.44*(0.65+0.35*env);
+    g.save();
+    g.translate(px-nx*5,py-ny*5);
+    g.rotate(th);
+    drawFin(g,fw,fh,glow,cols);
+    g.restore();
   }
 }
 function clawSet(g,x,y,n,cw,chh,dir){ /* dir: 1 down, angled forward */
@@ -564,13 +590,13 @@ function sprTorso(spec,D){
   const bw=D.torsoW,bh=D.torsoH,pad=Math.round(52*s);
   const c=mkCanvas(bw+pad*2,bh+pad*2),g=c.getContext('2d');
   const cx=c.width/2,cy=c.height/2;
-  const spineX=cx-bw*0.47;
-  /* dorsal fins (glowing bone) or dark fur ridge along the spine */
-  g.save();
-  g.translate(spineX,cy+bh*0.42);
-  g.rotate(-Math.PI/2);
-  finRow(g,0,bh*0.85,0,spec.fur?9:spec.mutant?10:7,(spec.fur?20:spec.mutant?54:44)*s,spec.glow,spec.fin);
-  g.restore();
+  /* dorsal fins (glowing bone) or dark fur ridge — fanned along the
+     curved back silhouette, each following the local surface normal */
+  if(spec.fur)
+    finArc(g,cx,cy-bh*0.16,bw*0.52,bh*0.38,-1.72,-3.30,9,20*s,spec.glow,spec.fin);
+  else
+    finArc(g,cx,cy-bh*0.06,bw*0.50,bh*0.46,-1.78,-3.42,
+      spec.mutant?10:7,(spec.mutant?52:42)*s,spec.glow,spec.fin);
   g.beginPath();
   if(spec.fur){
     g.ellipse(cx,cy-bh*0.16,bw*0.52,bh*0.38,0,0,TAU);
@@ -698,6 +724,8 @@ function sprHead(spec,D){
     return {c,ax:cx,ay:cy};
   }
   /* theropod / serpent head */
+  const headFins=()=>finArc(g,cx-hw*0.06,cy-hh*0.02,hw*0.46,hh*0.52,
+    -1.55,-2.75,3,14*s,spec.glow,spec.fin);
   if(spec.hood){
     /* flared cobra hood behind the skull */
     const gr2=g.createRadialGradient(x0+hw*0.16,cy,4,x0+hw*0.16,cy,hh*1.05);
@@ -711,11 +739,7 @@ function sprHead(spec,D){
     g.beginPath();g.ellipse(x0+hw*0.10,cy-hh*0.34,7*s,10*s,-0.2,0,TAU);g.fill();
     g.beginPath();g.ellipse(x0+hw*0.10,cy+hh*0.34,7*s,10*s,0.2,0,TAU);g.fill();
   }
-  g.save();
-  g.translate(x0+hw*0.12,y0+hh*0.22);
-  g.rotate(-Math.PI/2-0.5);
-  finRow(g,0,hh*0.55,0,3,15*s,spec.glow,spec.fin);
-  g.restore();
+  headFins();
   g.beginPath();
   g.moveTo(x0+hw*0.06,y1-hh*0.30);
   g.quadraticCurveTo(x0-hw*0.05,y0+hh*0.35,x0+hw*0.16,y0+hh*0.10);

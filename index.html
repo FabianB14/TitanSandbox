@@ -401,31 +401,44 @@ function furStreaks(g,w,h,n){
 function finRow(g,x0,x1,y,count,hMax,glow,cols){
   cols=cols||['#f6eeda','#ded2b5','#988c72'];
   if(glow){
-    const gr=g.createLinearGradient(0,y-hMax,0,y+6);
-    gr.addColorStop(0,`rgba(${glow},0)`);
-    gr.addColorStop(0.85,`rgba(${glow},0.22)`);
+    /* soft elliptical glow behind the row — no hard rectangle edges */
+    const mx=(x0+x1)/2,len=Math.abs(x1-x0);
+    const gr=g.createRadialGradient(mx,y-hMax*0.35,2,mx,y-hMax*0.35,len*0.62+hMax);
+    gr.addColorStop(0,`rgba(${glow},0.20)`);
+    gr.addColorStop(0.7,`rgba(${glow},0.08)`);
     gr.addColorStop(1,`rgba(${glow},0)`);
-    g.fillStyle=gr;g.fillRect(Math.min(x0,x1)-8,y-hMax,Math.abs(x1-x0)+16,hMax+8);
+    g.save();
+    g.translate(mx,y-hMax*0.35);
+    g.scale(1,(hMax*1.2)/(len*0.62+hMax));
+    g.translate(-mx,-(y-hMax*0.35));
+    g.fillStyle=gr;
+    g.beginPath();g.arc(mx,y-hMax*0.35,len*0.62+hMax,0,TAU);g.fill();
+    g.restore();
   }
   for(let i=0;i<count;i++){
     const t=(i+0.5)/count;
     const x=x0+(x1-x0)*t;
     const env=0.5+0.5*Math.sin(t*Math.PI);
     const fh=hMax*(0.45+0.55*env)*rand(0.85,1.1);
-    const fw=hMax*0.34*(0.6+0.4*env);
+    const fw=hMax*0.44*(0.65+0.35*env);
     g.save();
-    if(glow){g.shadowColor=`rgba(${glow},0.85)`;g.shadowBlur=13;}
+    if(glow){g.shadowColor=`rgba(${glow},0.8)`;g.shadowBlur=12;}
     const gr=g.createLinearGradient(x,y-fh,x,y+2);
     gr.addColorStop(0,cols[0]);gr.addColorStop(0.55,cols[1]);gr.addColorStop(1,cols[2]);
     g.fillStyle=gr;
     g.beginPath();
+    /* rounded crest: blunt curved lobe instead of a needle point */
     g.moveTo(x-fw,y+3);
-    g.quadraticCurveTo(x-fw*0.25,y-fh*0.62,x+fw*0.12,y-fh);
-    g.quadraticCurveTo(x+fw*0.55,y-fh*0.35,x+fw,y+3);
+    g.bezierCurveTo(x-fw*0.95,y-fh*0.50,x-fw*0.42,y-fh*1.02,x+fw*0.06,y-fh*0.94);
+    g.bezierCurveTo(x+fw*0.48,y-fh*0.84,x+fw*0.78,y-fh*0.30,x+fw,y+3);
     g.closePath();g.fill();
     g.restore();
-    g.strokeStyle='rgba(60,48,36,0.35)';g.lineWidth=0.8;
-    g.beginPath();g.moveTo(x+fw*0.12,y-fh);g.lineTo(x+fw*0.05,y+2);g.stroke();
+    /* soft center rib */
+    g.strokeStyle='rgba(60,48,36,0.28)';g.lineWidth=0.9;
+    g.beginPath();
+    g.moveTo(x+fw*0.04,y-fh*0.88);
+    g.quadraticCurveTo(x-fw*0.02,y-fh*0.4,x+fw*0.02,y+2);
+    g.stroke();
   }
 }
 function clawSet(g,x,y,n,cw,chh,dir){ /* dir: 1 down, angled forward */

@@ -2787,10 +2787,18 @@ buildAllKaiju();
 resetWorld();
 requestAnimationFrame(tick);
 
-/* PWA: installable app */
+/* PWA: installable app. When a new version of the game deploys, the
+   updated service worker takes control — reload once so the player is
+   always on the latest build. */
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+  let swReloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(swReloaded)return;
+    swReloaded=true;
+    if(navigator.serviceWorker.controller)location.reload();
   });
 }
 

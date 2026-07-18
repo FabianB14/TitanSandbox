@@ -2751,9 +2751,11 @@ if(isIOS&&!isStandalone){
   setTimeout(()=>{
     if(!installEv&&!isStandalone){
       document.getElementById('menuTip').innerHTML=
-        'To install: open your browser&#8217;s <b>&#8942; menu</b> (top right) and choose '+
-        '<b>&#8220;Add to Home screen&#8221;</b> or <b>&#8220;Install app&#8221;</b>. '+
-        'If you don&#8217;t see it, the app may already be on your home screen.';
+        'To install: open Chrome&#8217;s <b>&#8942; menu</b> and choose <b>&#8220;Install app&#8221;</b> '+
+        '(or <b>&#8220;Add to Home screen&#8221; &#8594; Install</b>). '+
+        'No such option? You may be in an in-app browser &#8212; choose '+
+        '<b>&#8220;Open in Chrome&#8221;</b> first. On Samsung Internet: '+
+        '<b>&#8942; &#8594; Add page to &#8594; Home screen</b>.';
     }
   },3000);
 }

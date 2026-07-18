@@ -13,7 +13,7 @@ buildings with his breath.
   parts, building facades, cars, sky, parallax skyline, lattice tower) is
   rendered to offscreen canvases at load time with layered gradients, speckle
   noise, and glow. No image files.
-- **Three original kaiju** — each is a single rigid physics body with a
+- **Five original kaiju** — each is a single rigid physics body with a
   fully procedural animation rig: legs, arms, tail chain, head, and jaw are
   drawn kinematically (walk cycle, tail sway, head bob, jaw hinge), so poses
   always look deliberate. They stomp toward the nearest building, tumble as
@@ -25,6 +25,12 @@ buildings with his breath.
   - **Ravok** — a giant horned serpent: cobra-raised forebody, flared hood,
     crimson-glowing spine fins, and a corrosive venom spit that arcs and
     melts masonry.
+  - **Scorn** — a grotesque mutant saurian: near-black gnarled hide split by
+    glowing magma fissures, oversized craggy fins, chaotic teeth, tiny
+    withered arms, a huge tail, and a violet atomic beam. Keening screech.
+  - **Meka** — a giant robot kaiju: riveted gunmetal armor with panel lines,
+    a glowing reactor core, visor eye, beacon antenna, angular metal fins,
+    and a cyan laser. Klaxon roar.
 - **Fight mode & HP** — hit Fight and the kaiju brawl: claw strikes,
   knockback, and ability duels. Every kaiju has 100 HP; explosions, beams,
   venom, hard impacts, and the military all deal damage. At zero HP they

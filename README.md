@@ -13,7 +13,7 @@ buildings with his breath.
   parts, building facades, cars, sky, parallax skyline, lattice tower) is
   rendered to offscreen canvases at load time with layered gradients, speckle
   noise, and glow. No image files.
-- **Five original kaiju** — each is a single rigid physics body with a
+- **Seven original kaiju** — each is a single rigid physics body with a
   fully procedural animation rig: legs, arms, tail chain, head, and jaw are
   drawn kinematically (walk cycle, tail sway, head bob, jaw hinge), so poses
   always look deliberate. They stomp toward the nearest building, tumble as
@@ -31,6 +31,16 @@ buildings with his breath.
   - **Meka** — a giant robot kaiju: riveted gunmetal armor with panel lines,
     a glowing reactor core, visor eye, beacon antenna, angular metal fins,
     and a cyan laser. Klaxon roar.
+  - **Hydrax** (store unlock) — a golden three-headed dragon with wings and
+    forked lightning that slams around its target. Cackling triple screech.
+  - **Vanguard** (store unlock) — a hero mech in white armor with a gold
+    V-crest, red intakes, and a rapid plasma rifle.
+- **Coins & store** — earn coins for crushing buildings, clearing levels,
+  winning kaiju fights, wrecking the military, and popping cars; spend them
+  in the in-game store to unlock Hydrax and Vanguard (saved on-device).
+- **Warships** — on water levels destroyers cruise the bay and shell the
+  kaiju alongside the tanks, helicopters, and jets. Cars explode from hard
+  impacts, blasts, and beam fire — with chain reactions.
 - **Fight mode & HP** — hit Fight and the kaiju brawl: claw strikes,
   knockback, and ability duels. Every kaiju has 100 HP; explosions, beams,
   venom, hard impacts, and the military all deal damage. At zero HP they

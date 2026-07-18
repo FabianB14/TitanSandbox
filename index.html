@@ -56,7 +56,17 @@
     background:rgba(255,255,255,0.05)!important;box-shadow:0 6px 22px rgba(0,0,0,0.45)!important;}
   #menuTip{margin-top:26px;font-size:12px;color:rgba(220,216,208,0.5);max-width:340px;
     margin-left:auto;margin-right:auto;line-height:1.5;}
-  body.menu-open #panel,body.menu-open #hint{display:none;}
+  body.menu-open #panel,body.menu-open #hint,body.menu-open #topbar{display:none;}
+  #topbar{position:fixed;top:10px;right:10px;z-index:10;display:flex;gap:6px;
+    background:rgba(18,20,24,0.82);border:1px solid rgba(255,255,255,0.10);
+    border-radius:12px;padding:6px;backdrop-filter:blur(6px);
+    box-shadow:0 6px 24px rgba(0,0,0,0.45);}
+  #topbar button{appearance:none;border:1px solid rgba(255,255,255,0.10);border-radius:8px;
+    background:rgba(255,255,255,0.06);color:#d8dce2;font-size:13px;font-weight:600;
+    padding:8px 11px;min-height:38px;cursor:pointer;display:flex;align-items:center;gap:6px;
+    touch-action:manipulation;transition:background .12s;}
+  #topbar button.active{background:rgba(255,150,50,0.22);border-color:rgba(255,160,60,0.65);
+    color:#ffd9a8;}
   #store{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
     background:rgba(10,10,16,0.82);backdrop-filter:blur(4px);}
   #store.hidden{display:none;}
@@ -119,7 +129,6 @@
   <button data-tool="mecha"><span class="ico">&#129302;</span>Meka</button>
   <button data-tool="hydrax" id="btnHydrax"><span class="ico">&#128329;</span>Hydrax</button>
   <button data-tool="vang" id="btnVang"><span class="ico">&#9889;</span>Vanguard</button>
-  <button id="storeBtn"><span class="ico">&#128176;</span>Store</button>
   <button data-tool="building"><span class="ico">&#127970;</span>Building</button>
   <button data-tool="bomb"><span class="ico">&#128163;</span>Bomb</button>
   <button data-tool="nuke"><span class="ico">&#9762;</span>A-Bomb</button>
@@ -132,10 +141,14 @@
   <button data-tool="jet"><span class="ico">&#9992;&#65039;</span>Jet Strike</button>
   <button data-tool="ship"><span class="ico">&#128674;</span>Ship</button>
   <div class="sep"></div>
-  <button id="fightBtn"><span class="ico">&#9876;</span>Fight</button>
   <button id="resetBtn"><span class="ico">&#8634;</span>Reset</button>
-  <button id="menuBtn"><span class="ico">&#8962;</span>Menu</button>
   </div>
+</div>
+<div id="topbar">
+  <button id="autoBtn"><span class="ico">&#9881;&#65039;</span>Auto</button>
+  <button id="fightBtn"><span class="ico">&#9876;</span>Fight</button>
+  <button id="storeBtn"><span class="ico">&#128176;</span>Store</button>
+  <button id="menuBtn"><span class="ico">&#8962;</span>Menu</button>
 </div>
 <div id="store" class="hidden">
   <div id="storeCard">
@@ -214,7 +227,8 @@ function award(n,x,y){
   if(x!==undefined)addP({x,y,vx:0,vy:-0.8,life:70,max:70,size:14,type:'coin',txt:'+'+n});
   if(typeof updateStoreUI==='function')updateStoreUI();
 }
-let tool='grab',grab=null,breathHold=null,shake=0,frame=0,nextGroup=-2,fightMode=false;
+let tool='grab',grab=null,breathHold=null,shake=0,frame=0,nextGroup=-2,fightMode=false,autoMode=false;
+let mouseX=-9999,mouseY=-9999;
 let bgSky=null,bgFar=null,bgNear=null,streetC=null,vignetteC=null,beacons=[];
 let groundBody=null;
 const MAXP=480;
@@ -1093,6 +1107,33 @@ function buildAllKaiju(){
     DIMS[k]=makeDims(SPECIES[k]);
     SPRS[k]=paintKaiju(SPECIES[k],DIMS[k]);
   }
+  loadCustomSprites();
+}
+/* Optional custom art: drop PNGs into a sprites/ folder next to
+   index.html, named <species>_<part>.png — e.g. sprites/titan_head.png.
+   Species keys: titan, ape, drax, scorn, mecha, hydrax, vang.
+   Parts: torso, head, jaw, arm, leg, tail0, tail1, tail2, wings.
+   Each image is stretched onto that part's canvas, so it inherits the
+   rig's proportions and animation. Only use art you own the rights to. */
+function loadCustomSprites(){
+  const parts=['torso','head','jaw','arm','leg','tail0','tail1','tail2','wings'];
+  for(const key in SPECIES){
+    for(const part of parts){
+      const img=new Image();
+      img.onload=()=>{
+        const SP=SPRS[key];
+        if(!SP||!SP[part])return;
+        const base=SP[part];
+        const c=mkCanvas(base.c.width,base.c.height);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        SP[part]={c,ax:base.ax,ay:base.ay};
+        if(part==='arm')SP.armFar={c:darkVariant(c,0.30),ax:base.ax,ay:base.ay};
+        if(part==='leg')SP.legFar={c:darkVariant(c,0.32),ax:base.ax,ay:base.ay};
+      };
+      img.onerror=()=>{};
+      img.src='sprites/'+key+'_'+part+'.png';
+    }
+  }
 }
 
 function spawnTitan(x,key){
@@ -1230,6 +1271,7 @@ function triggerUlt(t,target){
     return;
   }
   t.ultCd=now+ULT_CD;
+  t.pickFlash=now;
   releaseBite(t);
   roarFor(t.spec);
   setFacing(t,target.x>t.torso.position.x?1:-1);
@@ -1414,6 +1456,20 @@ function muscles(t,now){
         const stopX=bl.x-side*(bl.halfW+D.torsoW*0.72);
         const dx=stopX-bx;
         if(Math.abs(dx)>12&&Math.sign(dx)===side)dir=side;
+        /* auto rampage: use abilities on the city unprompted */
+        if(autoMode&&now>(t.autoCd||0)&&Math.abs(bl.x-bx)<820){
+          const tgt={x:bl.x+rand(-bl.halfW*0.5,bl.halfW*0.5),y:bl.top+bl.h*rand(0.2,0.6)};
+          if(now>t.ultCd&&Math.random()<0.3){
+            triggerUlt(t,tgt);
+          }else{
+            setFacing(t,tgt.x>bx?1:-1);
+            t.breathTarget=tgt;
+            t.breathStart=now;t.breathUntil=now+1300;
+            t.pickFlash=now;
+            roarFor(t.spec);
+          }
+          t.autoCd=now+randi(2600,4400);
+        }
       }
     }
   }
@@ -1476,6 +1532,7 @@ function triggerBreath(clickP){
   t.breathTarget={x:clickP.x,y:clickP.y};
   t.breathStart=now;
   t.breathUntil=now+1400;
+  t.pickFlash=now;
   releaseBite(t);
   roarFor(t.spec);
   return t;
@@ -3191,6 +3248,26 @@ function drawTitanReal(t,now){
     ctx.globalCompositeOperation='source-over';
   }
 }
+function drawPick(t,now,col){
+  const x=t.torso.position.x;
+  const topY=t.torso.position.y-t.bodyH/2-30+Math.sin(now/170)*5;
+  ctx.globalCompositeOperation='lighter';
+  /* chevron above the head */
+  ctx.fillStyle=`rgba(${col},0.9)`;
+  ctx.beginPath();
+  ctx.moveTo(x-13,topY-14);
+  ctx.lineTo(x+13,topY-14);
+  ctx.lineTo(x,topY);
+  ctx.closePath();ctx.fill();
+  /* pulsing ring at the feet */
+  const pr=0.5+0.5*Math.sin(now/220);
+  ctx.strokeStyle=`rgba(${col},${(0.35+0.3*pr).toFixed(3)})`;
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.ellipse(x,groundY-4,t.D.torsoW*(0.8+0.12*pr),10+3*pr,0,0,TAU);
+  ctx.stroke();
+  ctx.globalCompositeOperation='source-over';
+}
 function drawCar(b){
   const spr=b.plugin.sprite;
   ctx.save();
@@ -3433,6 +3510,12 @@ document.getElementById('exitBtn').addEventListener('click',()=>{
   },300);
 });
 document.body.classList.add('menu-open');
+document.getElementById('autoBtn').addEventListener('click',()=>{
+  audio();
+  autoMode=!autoMode;
+  document.getElementById('autoBtn').classList.toggle('active',autoMode);
+  toast(autoMode?'AUTO RAMPAGE ON — kaiju will level the city themselves':'Auto off');
+});
 document.getElementById('fightBtn').addEventListener('click',()=>{
   audio();
   fightMode=!fightMode;
@@ -3463,6 +3546,7 @@ cv.addEventListener('pointerdown',e=>{
   audio();
   e.preventDefault();
   const p=evPos(e);
+  mouseX=p.x;mouseY=p.y;
   if(tool==='grab'){
     let found=Query.point(Composite.allBodies(world),p).filter(b=>b!==groundBody);
     if(!found.length)return;
@@ -3520,6 +3604,8 @@ cv.addEventListener('pointerdown',e=>{
   else if(tool==='ship')spawnShip(p.x);
 });
 window.addEventListener('pointermove',e=>{
+  const mp=evPos(e);
+  mouseX=mp.x;mouseY=mp.y;
   if(grab){
     const p=evPos(e);
     grab.cons.pointA.x=clamp(p.x,-100,W+100);
@@ -3626,6 +3712,20 @@ function render(now){
     ctx.drawImage(nukeSpr,-17,-32);
     ctx.restore();
   }
+  /* highlight which kaiju will fire for the Attack / Ultimate tools */
+  if((tool==='breath'||tool==='ult')&&mouseX>-9000){
+    let best=null,bd=1e9;
+    for(const t of titans){
+      if(t.dead)continue;
+      const d=dist(t.torso.position,{x:mouseX,y:mouseY});
+      if(d<bd){bd=d;best=t;}
+    }
+    if(best)drawPick(best,now,best.spec.beam||best.spec.glow||'255,205,90');
+  }
+  for(const t of titans){
+    if(t.pickFlash&&now-t.pickFlash<650&&!t.dead)
+      drawPick(t,now,t.spec.beam||t.spec.glow||'255,205,90');
+  }
   for(const t of titans)drawTitanReal(t,now);
   /* the bay: translucent water over everything standing in it */
   {
@@ -3670,14 +3770,14 @@ function render(now){
   ctx.font='600 12px "Segoe UI",sans-serif';
   ctx.textAlign='right';
   ctx.fillStyle='rgba(235,230,220,0.65)';
-  ctx.fillText('LV '+(LVL+1)+' — '+LEVELS[LVL%LEVELS.length].name,W-12,22);
+  ctx.fillText('LV '+(LVL+1)+' — '+LEVELS[LVL%LEVELS.length].name,W-12,74);
   ctx.fillStyle='#ffcd5a';
-  ctx.beginPath();ctx.arc(W-66-String(coins).length*8,37,6,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.arc(W-66-String(coins).length*8,89,6,0,TAU);ctx.fill();
   ctx.fillStyle='rgba(120,84,20,0.9)';
-  ctx.beginPath();ctx.arc(W-66-String(coins).length*8,37,3,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.arc(W-66-String(coins).length*8,89,3,0,TAU);ctx.fill();
   ctx.fillStyle='#ffd98c';
   ctx.font='800 14px "Segoe UI",sans-serif';
-  ctx.fillText(coins.toLocaleString(),W-12,42);
+  ctx.fillText(coins.toLocaleString(),W-12,94);
   ctx.textAlign='left';
   /* level banner */
   if(bannerT>0){

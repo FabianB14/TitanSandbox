@@ -67,7 +67,16 @@ buildings with his breath.
   level with buoyant water, splashes, and boats. Level the whole city and
   the next level rolls in automatically, growing harder each cycle.
 - **Title screen & UI** — start menu with Start/Exit, collapsible scrolling
-  tool panel, pause while the menu is open.
+  tool panel, a top-right quick bar (Auto rampage, Fight, Store, Menu), and
+  an attacker highlight: with Attack/Ultimate selected, the kaiju that will
+  fire is marked with a pulsing ring and chevron in its beam color.
+- **Auto rampage** — toggle Auto and your kaiju level the city themselves,
+  mixing breath attacks and ultimates, clearing level after level.
+- **Custom sprites (optional)** — drop PNGs into a `sprites/` folder named
+  `<species>_<part>.png` (species: titan, ape, drax, scorn, mecha, hydrax,
+  vang; parts: torso, head, jaw, arm, leg, tail0-2, wings) and the game
+  swaps them in over the generated art at load, inheriting the animation
+  rig. Only ship art you have the rights to.
 - **Tools** — Grab (drag & fling anything), three kaiju spawners (max 3 on
   screen), Building spawn, Bomb (3-second fuse ring, radial blast, screen
   shake, synthesized WebAudio boom), **A-Bomb** (falling warhead, screen-white

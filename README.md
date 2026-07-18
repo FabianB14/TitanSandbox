@@ -13,19 +13,27 @@ buildings with his breath.
   parts, building facades, cars, sky, parallax skyline, lattice tower) is
   rendered to offscreen canvases at load time with layered gradients, speckle
   noise, and glow. No image files.
-- **Ragdoll titan** — a 10-part physics ragdoll (torso, head, hinged jaw,
-  arms, legs, 3 tail segments) with a balance "muscle" controller: he stands
-  upright, stomps toward the nearest building, ragdolls when thrown or
-  blasted, then staggers back up.
+- **Three original kaiju** — every one a 10-part physics ragdoll (torso,
+  head, hinged jaw, arms, legs, 3 tail segments) with a balance "muscle"
+  controller: they stand upright, stomp toward the nearest building, ragdoll
+  when thrown or blasted, then stagger back up. Painted flesh connectors
+  bridge every joint so they read as continuous creatures, not jointed dolls.
+  - **Titan** — charcoal theropod with ember-glowing bone fins and a fire
+    breath.
+  - **Goliath** — a giant fur-textured ape with long heavy arms and a
+    concussive roar that blasts buildings apart with shockwaves.
+  - **Ravok** — a moss-green horned saurian with crimson-glowing fins and a
+    searing crimson breath.
 - **Crumbling buildings** — each building is a grid of individual physics
   bricks joined by breakable constraints; every brick renders its slice of the
   facade (windows, cornices, doorway), so debris looks architectural. Bricks
   char dark when burned. Buildings crumble progressively and never despawn.
-- **Tools** — Grab (drag & fling anything), Titan spawn (max 3), Building
-  spawn, Bomb (3-second fuse ring, radial blast, screen shake, synthesized
-  WebAudio boom), Breath (auto-aimed ember beam: particle stream, cone force,
-  joint-melting, charring), Car spawn (he can bite and carry cars in his
-  jaws), Reset.
+- **Tools** — Grab (drag & fling anything), three kaiju spawners (max 3 on
+  screen), Building spawn, Bomb (3-second fuse ring, radial blast, screen
+  shake, synthesized WebAudio boom), **A-Bomb** (falling warhead, screen-white
+  flash, mushroom cloud, city-levelling blast radius), Breath/Roar (auto-aimed
+  at the nearest block), Car spawn (kaiju bite and carry cars in their jaws),
+  Reset.
 - Works with mouse and touch. No build step, no backend — one static file.
 
 ## Running locally
@@ -41,6 +49,6 @@ internet access), or serve the folder with any static file server.
 
 ## Legal
 
-All art and the creature design are original. The game is inspired by the
-kaiju genre generally and contains no third-party characters, names, or
-likenesses.
+All art and all three creature designs are original. The game is inspired by
+the kaiju genre generally (giant saurians, giant apes) and contains no
+third-party characters, names, or likenesses.

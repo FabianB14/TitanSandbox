@@ -124,7 +124,13 @@
   <button data-tool="bomb"><span class="ico">&#128163;</span>Bomb</button>
   <button data-tool="nuke"><span class="ico">&#9762;</span>A-Bomb</button>
   <button data-tool="breath"><span class="ico">&#128293;</span>Attack</button>
+  <button data-tool="ult"><span class="ico">&#128165;</span>Ultimate</button>
   <button data-tool="car"><span class="ico">&#128663;</span>Car</button>
+  <div class="sep"></div>
+  <button data-tool="tank"><span class="ico">&#129686;</span>Tank</button>
+  <button data-tool="heli"><span class="ico">&#128681;</span>Heli</button>
+  <button data-tool="jet"><span class="ico">&#9992;&#65039;</span>Jet Strike</button>
+  <button data-tool="ship"><span class="ico">&#128674;</span>Ship</button>
   <div class="sep"></div>
   <button id="fightBtn"><span class="ico">&#9876;</span>Fight</button>
   <button id="resetBtn"><span class="ico">&#8634;</span>Reset</button>
@@ -445,6 +451,30 @@ function drawFin(g,fw,fh,glow,cols){
   g.moveTo(fw*0.04,-fh*0.88);
   g.quadraticCurveTo(-fw*0.02,-fh*0.4,fw*0.02,2);
   g.stroke();
+}
+/* fins along a quadratic curve (tail tops): each follows the local normal */
+function finQuad(g,p0,pc,p1,count,hMax,glow,cols){
+  cols=cols||['#f6eeda','#ded2b5','#988c72'];
+  for(let i=0;i<count;i++){
+    const t=(i+0.5)/count;
+    const u=1-t;
+    const px=u*u*p0.x+2*u*t*pc.x+t*t*p1.x;
+    const py=u*u*p0.y+2*u*t*pc.y+t*t*p1.y;
+    const dx=2*u*(pc.x-p0.x)+2*t*(p1.x-pc.x);
+    const dy=2*u*(pc.y-p0.y)+2*t*(p1.y-pc.y);
+    const dl=Math.hypot(dx,dy)||1;
+    let nx=dy/dl,ny=-dx/dl;
+    if(ny>0){nx=-nx;ny=-ny;}
+    const th=Math.atan2(nx,-ny);
+    const env=0.5+0.5*Math.sin(t*Math.PI);
+    const fh=hMax*(0.45+0.55*env)*rand(0.9,1.1);
+    const fw=hMax*0.44*(0.65+0.35*env);
+    g.save();
+    g.translate(px-nx*3,py-ny*3);
+    g.rotate(th);
+    drawFin(g,fw,fh,glow,cols);
+    g.restore();
+  }
 }
 /* fins along an ellipse arc: each sits ON the silhouette and points along
    the local outward normal, so the row follows the body's curve */
@@ -975,8 +1005,11 @@ function sprTail(spec,D,idx){
   const cx=c.width/2,cy=c.height/2;
   const x0=cx-twd/2,x1=cx+twd/2;
   const hL=tht*(idx===2?0.42:0.78),hR=tht;
-  finRow(g,x0+twd*0.1,x1-twd*0.08,cy-Math.max(hL,hR)/2+2,idx===2?3:4,
-    (spec.fur?12:(26-idx*7))*s,spec.glow,spec.fin);
+  finQuad(g,
+    {x:x0+twd*0.06,y:cy-hL*0.5+2},
+    {x:cx,y:cy-hR*0.58+2},
+    {x:x1-twd*0.05,y:cy-hR*0.5+2},
+    idx===2?3:4,(spec.fur?12:(26-idx*7))*s,spec.glow,spec.fin);
   g.beginPath();
   if(idx===2){
     g.moveTo(x0,cy);
@@ -1069,7 +1102,7 @@ function spawnTitan(x,key){
   const bodyH=D.standH+D.torsoH/2;
   const t={facing:1,phase:0,walk:0,staggerUntil:0,breathUntil:0,breathTarget:null,grabbed:false,
     bite:null,biteCd:0,flipCd:0,active:true,jawOpen:0,aimTilt:0,
-    hp:100,hurtT:0,atkCd:0,impCd:0,strikeT:0,smashCd:0,rangedCd:0,dead:false,deadAt:0,fadeA:1,hostile:false,
+    hp:100,hurtT:0,atkCd:0,impCd:0,strikeT:0,smashCd:0,rangedCd:0,ultCd:0,ultWide:false,ult:null,slamAt:0,stormUntil:0,barrage:0,sweepT0:0,ultUntil:0,barrageTarget:null,dead:false,deadAt:0,fadeA:1,hostile:false,
     spec:spec,D:D,SP:SPRS[key],bodyH:bodyH};
   const b=Bodies.rectangle(x,groundY-bodyH/2,D.torsoW*0.95,bodyH,
     {density:0.0045,friction:0.9,frictionStatic:1,frictionAir:0.02,restitution:0,
@@ -1138,6 +1171,144 @@ function killTitan(t){
       size:rand(10,22),type:'smoke'});
   Body.setAngularVelocity(t.torso,(Math.random()<0.5?-1:1)*0.14);
 }
+const ULT_CD=25000;
+function ultBlast(t,R,power,dmg,charAmt,col){
+  const x=t.torso.position.x,y=Math.min(t.torso.position.y,groundY-20);
+  shake=Math.min(55,shake+42);boom();
+  addP({x,y,vx:0,vy:0,life:12,max:12,size:R*0.8,type:'flash'});
+  for(let i=0;i<36;i++){
+    const a=rand(0,TAU),sp=rand(3,11);
+    addP({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:randi(24,60),max:60,
+      size:rand(2,5),type:'ember',col});
+  }
+  for(let i=0;i<16;i++)
+    addP({x:x+rand(-R*0.4,R*0.4),y:groundY-6,vx:rand(-2,2),vy:rand(-2,-0.5),
+      life:randi(40,80),max:80,size:rand(10,24),type:'dust'});
+  const pt={x,y};
+  for(const b of Composite.allBodies(world)){
+    if(b===groundBody||(b.plugin&&b.plugin.titan===t))continue;
+    const d=dist(b.position,pt);
+    if(d<R*1.1&&b.plugin&&b.plugin.brick){
+      wakeBrick(b);
+      if(charAmt)b.plugin.char=Math.min(1,b.plugin.char+charAmt);
+    }
+    if(d<R&&!b.isStatic){
+      const f=1-d/R;
+      const dv=Vector.normalise(Vector.sub(b.position,pt));
+      Body.setVelocity(b,{x:b.velocity.x+dv.x*power*f,y:b.velocity.y+dv.y*power*f-4*f});
+      Sleeping.set(b,false);
+      if(b.plugin&&b.plugin.titanPart)
+        Body.setAngularVelocity(b,b.angularVelocity+(Math.random()-0.5)*0.4);
+    }
+  }
+  for(const c of breakCons){
+    if(c.plugin.dead)continue;
+    const mid={x:(c.bodyA.position.x+c.bodyB.position.x)/2,y:(c.bodyA.position.y+c.bodyB.position.y)/2};
+    if(dist(mid,pt)<R*0.95)sever(c);
+  }
+  const now2=performance.now();
+  for(const o of titans){
+    if(o===t)continue;
+    const d=dist(o.torso.position,pt);
+    if(d<R*1.6){
+      applyDamage(o,dmg*(1-d/(R*1.6)));
+      if(!o.dead)o.staggerUntil=now2+1500;
+      releaseBite(o);
+    }
+  }
+  for(const c2 of [...cars])
+    if(!c2.plugin.boat&&!c2.plugin.boomed&&dist(c2.position,pt)<R)carBoom(c2);
+  for(const b2 of tanks)if(dist(b2.position,pt)<R)wreckTank(b2);
+  for(const b2 of helis)if(dist(b2.position,pt)<R*1.2)wreckHeli(b2);
+  for(const b2 of ships)if(dist(b2.position,pt)<R*1.1)wreckShip(b2);
+}
+function triggerUlt(t,target){
+  const now=performance.now();
+  if(t.dead)return;
+  if(now<t.ultCd){
+    toast('Ultimate ready in '+Math.ceil((t.ultCd-now)/1000)+'s');
+    return;
+  }
+  t.ultCd=now+ULT_CD;
+  releaseBite(t);
+  roarFor(t.spec);
+  setFacing(t,target.x>t.torso.position.x?1:-1);
+  const k=t.spec.key;
+  if(k==='titan'){
+    t.ultWide=true;
+    t.breathTarget={x:target.x,y:target.y};
+    t.breathStart=now;t.breathUntil=now+2100;
+    setTimeout(()=>{t.ultWide=false;},2200);
+    toast('OVERCHARGE BEAM');
+  }else if(k==='ape'){
+    Body.setVelocity(t.torso,{x:t.torso.velocity.x,y:-13});
+    t.slamAt=now+700;
+    toast('SEISMIC SLAM');
+  }else if(k==='drax'){
+    const m=mouthPos(t);
+    for(let i=0;i<22;i++){
+      const a=Math.atan2(target.y-m.y,target.x-m.x)+rand(-0.5,0.5);
+      const sp=rand(7,13);
+      projs.push({x:m.x,y:m.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,type:'venom',life:150});
+    }
+    t.jawOpen=0.5;
+    toast('VENOM DELUGE');
+  }else if(k==='scorn'){
+    flash=Math.max(flash,0.5);
+    ultBlast(t,320,20,40,0.8,'190,120,255');
+    toast('MELTDOWN NOVA');
+  }else if(k==='mecha'){
+    t.ult='sweep';t.sweepT0=now;t.ultUntil=now+1700;t.ultWide=true;
+    t.breathStart=now;t.breathUntil=now+1700;
+    t.breathTarget={x:target.x,y:target.y};
+    setTimeout(()=>{t.ult=null;t.ultWide=false;},1800);
+    toast('SWEEP LASER');
+  }else if(k==='hydrax'){
+    t.stormUntil=now+2200;
+    t.breathStart=now;t.breathUntil=now+2200;
+    t.breathTarget={x:target.x,y:target.y};
+    toast('SKYFALL STORM');
+  }else if(k==='vang'){
+    t.barrage=12;
+    t.barrageTarget={x:target.x,y:target.y};
+    toast('MISSILE BARRAGE');
+  }
+}
+function ultStep(t,now){
+  if(t.dead)return;
+  if(t.slamAt&&now>t.slamAt){
+    t.slamAt=0;
+    ultBlast(t,360,17,30,0,'230,205,160');
+    thudSnd(0.6);
+  }
+  if(t.ult==='sweep'&&now<t.ultUntil){
+    const prog=clamp((now-t.sweepT0)/1700,0,1);
+    const a=-1.05+prog*1.15;
+    const m=mouthPos(t);
+    t.breathTarget={x:m.x+t.facing*Math.cos(a)*540,y:m.y+Math.sin(a)*540};
+  }
+  if(t.stormUntil&&now<t.stormUntil&&frame%4===0){
+    const sx=rand(60,W-60);
+    const ex=sx+rand(-30,30),ey=groundY-rand(6,150);
+    const pts=[{x:sx+rand(-50,50),y:-30}];
+    for(let k=1;k<=6;k++){
+      const u=k/6;
+      pts.push({x:pts[0].x+(ex-pts[0].x)*u+rand(-30,30)*(1-u*0.5),
+                y:-30+(ey+30)*u+rand(-14,14)});
+    }
+    pts.push({x:ex,y:ey});
+    t.bolts=t.bolts||[];
+    t.bolts.push({pts,life:9});
+    miniBoom(ex,ey,60,4);
+  }
+  if(t.barrage>0&&frame%5===0){
+    t.barrage--;
+    const m=mouthPos(t);
+    projs.push({x:m.x,y:m.y-8,vx:t.facing*rand(0.5,2.5),vy:rand(-9.5,-7),
+      type:'missile',life:180,tx:t.barrageTarget.x+rand(-90,90)});
+    snapSnd();
+  }
+}
 function nearestBld(t){
   let best=null,bd=1e9;
   for(const bl of buildings){
@@ -1200,6 +1371,9 @@ function muscles(t,now){
       }
       /* out of melee reach: pause and fire the special at the rival */
       const adx=Math.abs(dx);
+      if(now>t.ultCd&&adx<820&&Math.random()<0.006){
+        triggerUlt(t,{x:foe.torso.position.x,y:foe.torso.position.y-foe.bodyH*0.3});
+      }
       if(adx>range*1.4&&adx<780&&now>t.rangedCd&&now>=t.breathUntil){
         t.rangedCd=now+randi(2400,4000);
         const side=Math.sign(dx)||t.facing;
@@ -1319,7 +1493,8 @@ function breathStep(t,now){
   const m=mouthPos(t);
   const aim=Vector.normalise(Vector.sub(t.breathTarget,m));
   t.aimTilt=clamp(Math.atan2(aim.y,t.facing*aim.x),-0.45,0.45);
-  const range=540*S;
+  const wide=t.ultWide?1:0;
+  const range=540*S*(wide?1.35:1);
   const fire=t.spec.fire;
   shake=Math.max(shake,fire?1.6:2.4);
   if(t.spec.lightning){
@@ -1391,20 +1566,20 @@ function breathStep(t,now){
     const proj=v.x*aim.x+v.y*aim.y;
     if(proj<0||proj>range)continue;
     const perp=Math.abs(v.x*aim.y-v.y*aim.x);
-    if(perp>proj*0.34+26*S)continue;
+    if(perp>proj*(wide?0.55:0.34)+(wide?42:26)*S)continue;
     const f=1-proj/range;
     if(b.plugin&&b.plugin.brick){
       if(fire)b.plugin.char=Math.min(1,b.plugin.char+0.028*f+0.004);
       if(b.isStatic){if(Math.random()<(fire?0.055:0.075)*f)wakeBrick(b);}
     }
     if(b.plugin&&b.plugin.titanPart&&b.plugin.titan!==t){
-      applyDamage(b.plugin.titan,(fire?0.55:0.45)*f);
+      applyDamage(b.plugin.titan,(fire?0.55:0.45)*f*(wide?1.8:1));
     }
     if(fire&&b.plugin&&b.plugin.car&&!b.plugin.boat&&!b.plugin.burnAt){
       b.plugin.burnAt=now+900;
     }
     if(!b.isStatic){
-      const pw=fire?0.55:0.85;
+      const pw=(fire?0.55:0.85)*(wide?1.8:1);
       Body.setVelocity(b,{x:b.velocity.x+aim.x*pw*f,y:b.velocity.y+aim.y*pw*f-0.08});
       Sleeping.set(b,false);
     }
@@ -1986,11 +2161,14 @@ function shipSprite(){
   g.beginPath();g.arc(122,28,7,Math.PI,0);g.fill();
   return c;
 }
-function spawnShip(){
+function spawnShip(atX){
+  if(ships.length>=3){toast('Max ships');return;}
   if(!shipSpr)shipSpr=shipSprite();
   const L=curL();
-  const wx=W*L.water;
-  const b=Bodies.rectangle(clamp(rand(wx+120,W-90),wx+90,W-70),groundY-30,140,26,
+  let sx;
+  if(atX!==undefined)sx=clamp(atX,90,W-70);
+  else{const wx=W*L.water;sx=clamp(rand(wx+120,W-90),wx+90,W-70);}
+  const b=Bodies.rectangle(sx,groundY-30,140,26,
     {chamfer:{radius:6},density:0.0022,friction:0.4,frictionAir:0.03,label:'ship'});
   b.plugin={ship:{cd:0,wreck:false}};
   Composite.add(world,b);ships.push(b);
@@ -2002,20 +2180,29 @@ function wreckShip(b){
   award(40,b.position.x,b.position.y-30);
   miniBoom(b.position.x,b.position.y-8,80,0);
 }
-function spawnTank(){
+function spawnTank(atX){
+  if(tanks.length>=5){toast('Max tanks');return;}
   if(!tankSpr)tankSpr=tankSprite();
-  const side=Math.random()<0.5?-30:W+30;
+  const side=atX!==undefined?clamp(atX,30,W-30):(Math.random()<0.5?-30:W+30);
   const b=Bodies.rectangle(side,groundY-14,56,18,
     {density:0.004,friction:0.8,chamfer:{radius:4},label:'tank'});
   b.plugin={tank:{cd:0,wreck:false,fade:1,aim:0}};
   Composite.add(world,b);tanks.push(b);
 }
-function spawnHeli(){
+function spawnHeli(atX){
+  if(helis.length>=4){toast('Max helicopters');return;}
   if(!heliSpr)heliSpr=heliSprite();
-  const b=Bodies.rectangle(Math.random()<0.5?-40:W+40,H*0.22,44,16,
+  const b=Bodies.rectangle(atX!==undefined?clamp(atX,40,W-40):(Math.random()<0.5?-40:W+40),H*0.22,44,16,
     {density:0.0016,friction:0.3,frictionAir:0.02,chamfer:{radius:5},label:'heli'});
   b.plugin={heli:{cd:0,wreck:false,side:Math.random()<0.5?-1:1}};
   Composite.add(world,b);helis.push(b);
+}
+function spawnJet(dropX){
+  if(jets.length>=2){toast('Max jets in the air');return;}
+  if(!jetSpr)jetSpr=jetSprite();
+  const fromLeft=dropX>W*0.5;
+  jets.push({x:fromLeft?-80:W+80,y:H*rand(0.12,0.22),vx:fromLeft?11:-11,
+    dropped:false,fall:false,ang:0,vy:0,dropX});
 }
 function wreckTank(b){
   const tk=b.plugin.tank;
@@ -2166,9 +2353,11 @@ function updateMilitary(now){
   for(let i=ships.length-1;i>=0;i--){
     const b=ships[i],sh=b.plugin.ship;
     if(sh.wreck){
-      /* listing and sinking */
+      /* listing — and sinking, if it is actually in water */
       Body.setAngularVelocity(b,b.angularVelocity+0.002);
-      Body.setVelocity(b,{x:b.velocity.x,y:b.velocity.y+0.05});
+      const L2=curL();
+      if(L2.water&&b.position.x>W*L2.water)
+        Body.setVelocity(b,{x:b.velocity.x,y:b.velocity.y+0.05});
       if(Math.random()<0.15)
         addP({x:b.position.x+rand(-40,40),y:b.position.y-10,vx:0,vy:rand(-0.8,-0.3),
           life:randi(24,46),max:46,size:rand(6,12),type:'smoke'});
@@ -2195,6 +2384,12 @@ function updateMilitary(now){
   /* jets */
   for(let i=jets.length-1;i>=0;i--){
     const j=jets[i];
+    if(j.dropX!==undefined&&!j.dropped&&!j.fall&&Math.abs(j.x-j.dropX)<44){
+      j.dropped=true;
+      spawnBomb(j.x,j.y+22);
+      const bb=bombs[bombs.length-1];
+      if(bb)bb.plugin.fuse=1300;
+    }
     if(j.fall){
       j.vy+=0.32;j.y+=j.vy;j.x+=j.vx*0.6;j.ang+=0.09;
       if(frame%3===0)addP({x:j.x,y:j.y,vx:0,vy:-0.4,life:30,max:30,size:8,type:'smoke'});
@@ -2208,7 +2403,7 @@ function updateMilitary(now){
     if(frame%4===0)addP({x:j.x-Math.sign(j.vx)*34,y:j.y+2,vx:0,vy:0,
       life:26,max:26,size:5,type:'smoke'});
     const t=nearestLiveTitan(j.x);
-    if(t&&!j.dropped&&Math.abs(t.torso.position.x-j.x)<70){
+    if(j.dropX===undefined&&t&&!j.dropped&&Math.abs(t.torso.position.x-j.x)<70){
       j.dropped=true;
       spawnBomb(j.x,j.y+22);
       const bb=bombs[bombs.length-1];
@@ -2222,6 +2417,11 @@ function updateMilitary(now){
     p.x+=p.vx;p.y+=p.vy;p.life--;
     if(p.type==='shell')p.vy+=0.13;
     if(p.type==='venom')p.vy+=0.17;
+    if(p.type==='missile'){
+      p.vy+=0.18;
+      if(p.life<160)p.vx+=clamp((p.tx-p.x)*0.0025,-0.5,0.5);
+      if(frame%2===0)addP({x:p.x,y:p.y,vx:0,vy:-0.2,life:14,max:14,size:4,type:'smoke'});
+    }
     /* plasma flies straight */
     let boom=false;
     if(p.y>groundY-3||p.life<=0)boom=true;
@@ -2229,7 +2429,7 @@ function updateMilitary(now){
       if(t.dead)continue;
       if(Math.abs(p.x-t.torso.position.x)<t.D.torsoW*0.55&&
          Math.abs(p.y-t.torso.position.y)<t.bodyH*0.55){
-        applyDamage(t,p.type==='venom'?6:p.type==='plasma'?4:p.type==='shell'?2.5:2);
+        applyDamage(t,p.type==='venom'?6:p.type==='missile'?4:p.type==='plasma'?4:p.type==='shell'?2.5:2);
         boom=true;break;
       }
     }
@@ -2243,7 +2443,7 @@ function updateMilitary(now){
     if(boom){
       if(p.type==='venom'){
         venomSplash(p.x,p.y);
-      }else miniBoom(p.x,p.y,p.type==='shell'?52:p.type==='plasma'?50:46,0);
+      }else miniBoom(p.x,p.y,p.type==='missile'?60:p.type==='shell'?52:p.type==='plasma'?50:46,p.type==='missile'?2:0);
       projs.splice(i,1);
     }
   }
@@ -2374,7 +2574,7 @@ function drawMilitary(now){
       ctx.rotate(Math.atan2(p.vy,p.vx));
       ctx.fillStyle=p.type==='shell'?'#2e2f2a':'#43483c';
       ctx.fillRect(-5,-2,10,4);
-      if(p.type==='rocket'){
+      if(p.type==='rocket'||p.type==='missile'){
         ctx.fillStyle='rgba(255,170,80,0.8)';
         ctx.fillRect(-9,-1.5,4,3);
       }
@@ -2932,8 +3132,9 @@ function drawTitanReal(t,now){
     const m=t.lastMouth,aim=t.lastAim;
     ctx.globalCompositeOperation='lighter';
     if(t.spec.fire){
-      const len=470*S,glow=t.spec.beam||t.spec.glow;
-      for(const [wdt,col] of [[26*S,`rgba(${glow},0.10)`],[13*S,`rgba(${glow},0.20)`],[5*S,'rgba(255,220,150,0.38)']]){
+      const wmul=t.ultWide?2.3:1;
+      const len=470*S*(t.ultWide?1.3:1),glow=t.spec.beam||t.spec.glow;
+      for(const [wdt,col] of [[26*S*wmul,`rgba(${glow},0.12)`],[13*S*wmul,`rgba(${glow},0.22)`],[5*S*wmul,'rgba(255,240,220,0.4)']]){
         ctx.strokeStyle=col;ctx.lineWidth=wdt;ctx.lineCap='round';
         ctx.beginPath();
         ctx.moveTo(m.x,m.y);
@@ -3302,7 +3503,21 @@ cv.addEventListener('pointerdown',e=>{
     const t=triggerBreath(p);
     if(t){breathHold=t;cv.setPointerCapture(e.pointerId);}
   }
+  else if(tool==='ult'){
+    let best=null,bd=1e9;
+    for(const t of titans){
+      if(t.dead)continue;
+      const d=dist(t.torso.position,p);
+      if(d<bd){bd=d;best=t;}
+    }
+    if(best)triggerUlt(best,p);
+    else toast('Spawn a kaiju first');
+  }
   else if(tool==='car')spawnCar(p.x);
+  else if(tool==='tank')spawnTank(p.x);
+  else if(tool==='heli')spawnHeli(p.x);
+  else if(tool==='jet')spawnJet(p.x);
+  else if(tool==='ship')spawnShip(p.x);
 });
 window.addEventListener('pointermove',e=>{
   if(grab){
@@ -3331,7 +3546,7 @@ function tick(ts){
   if(paused)acc=0;
   while(acc>=16.666&&steps<3){
     frame++;
-    for(const t of titans){muscles(t,now);breathStep(t,now);}
+    for(const t of titans){muscles(t,now);ultStep(t,now);breathStep(t,now);}
     /* bombs fuse */
     for(let i=bombs.length-1;i>=0;i--){
       const b=bombs[i];
@@ -3527,7 +3742,7 @@ if('serviceWorker' in navigator){
 window.TS={engine,world,get titans(){return titans;},get buildings(){return buildings;},
   spawnTitan,spawnBuilding,spawnBomb,spawnCar,spawnNuke,explode,nukeExplode,triggerBreath,resetWorld,loadLevel,get LVL(){return LVL;},
   get groundY(){return groundY;},get T(){return DIMS.titan;},get DIMS(){return DIMS;},
-  SPECIES,get S(){return S;},get coins(){return coins;},award,OWN};
+  SPECIES,get S(){return S;},get coins(){return coins;},award,OWN,spawnTank,spawnHeli,spawnJet,spawnShip,triggerUlt};
 })();
 </script>
 </body>

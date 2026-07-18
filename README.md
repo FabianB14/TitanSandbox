@@ -35,6 +35,12 @@ buildings with his breath.
     forked lightning that slams around its target. Cackling triple screech.
   - **Vanguard** (store unlock) — a hero mech in white armor with a gold
     V-crest, red intakes, and a rapid plasma rifle.
+- **Ultimates** — every kaiju has a signature super-attack on a 25s
+  cooldown (Ultimate tool, also used by the AI in fights): Overcharge Beam,
+  Seismic Slam, Venom Deluge, Meltdown Nova, Sweep Laser, Skyfall Storm,
+  and Missile Barrage.
+- **Deployable military** — Tank, Heli, Jet Strike, and Ship tools let you
+  drop the army in wherever you tap, alongside the automatic defense waves.
 - **Coins & store** — earn coins for crushing buildings, clearing levels,
   winning kaiju fights, wrecking the military, and popping cars; spend them
   in the in-game store to unlock Hydrax and Vanguard (saved on-device).

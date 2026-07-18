@@ -104,6 +104,7 @@
     <div id="menuTitle">TITAN<br>SANDBOX</div>
     <div id="menuTag">Stomp. Burn. Level the city.</div>
     <button id="startBtn">&#9655;&nbsp; START</button>
+    <button id="installBtn" style="display:none">&#10515;&nbsp; INSTALL APP</button>
     <button id="exitBtn">&#10005;&nbsp; EXIT</button>
     <div id="menuTip">Tip: use your browser's "Add to Home Screen" to install and play fullscreen.</div>
   </div>
@@ -2527,6 +2528,38 @@ function closeMenu(){
   document.body.classList.remove('menu-open');
 }
 document.getElementById('startBtn').addEventListener('click',()=>{audio();closeMenu();});
+/* install support: Android fires beforeinstallprompt (captured below);
+   iPad never prompts, so we show Share-menu instructions instead */
+let installEv=null;
+const installBtn=document.getElementById('installBtn');
+const isStandalone=window.matchMedia('(display-mode: standalone)').matches
+  ||window.navigator.standalone===true;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  installEv=e;
+  if(!isStandalone)installBtn.style.display='block';
+});
+installBtn.addEventListener('click',async()=>{
+  if(!installEv)return;
+  installEv.prompt();
+  const res=await installEv.userChoice.catch(()=>null);
+  if(res&&res.outcome==='accepted'){
+    installBtn.style.display='none';
+    toast('Installed! Launch it from your home screen.');
+  }
+  installEv=null;
+});
+window.addEventListener('appinstalled',()=>{installBtn.style.display='none';});
+const isIOS=(/iPad|iPhone|iPod/.test(navigator.userAgent)
+  ||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1));
+if(isIOS&&!isStandalone){
+  document.getElementById('menuTip').innerHTML=
+    'To install on iPad: tap the <b>Share</b> button (&#x2B06;&#xFE0E; square with arrow) '+
+    'in Safari, then choose <b>&#8220;Add to Home Screen&#8221;</b>. '+
+    'It will launch fullscreen like an app.';
+}else if(isStandalone){
+  document.getElementById('menuTip').textContent='Running as an installed app.';
+}
 document.getElementById('menuBtn').addEventListener('click',()=>openMenu());
 document.getElementById('exitBtn').addEventListener('click',()=>{
   window.close();

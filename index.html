@@ -881,7 +881,7 @@ function spawnTitan(x,key){
   const bodyH=D.standH+D.torsoH/2;
   const t={facing:1,phase:0,walk:0,staggerUntil:0,breathUntil:0,breathTarget:null,grabbed:false,
     bite:null,biteCd:0,flipCd:0,active:true,jawOpen:0,aimTilt:0,
-    hp:100,hurtT:0,atkCd:0,impCd:0,strikeT:0,smashCd:0,dead:false,deadAt:0,fadeA:1,hostile:false,
+    hp:100,hurtT:0,atkCd:0,impCd:0,strikeT:0,smashCd:0,rangedCd:0,dead:false,deadAt:0,fadeA:1,hostile:false,
     spec:spec,D:D,SP:SPRS[key],bodyH:bodyH};
   const b=Bodies.rectangle(x,groundY-bodyH/2,D.torsoW*0.95,bodyH,
     {density:0.0045,friction:0.9,frictionStatic:1,frictionAir:0.02,restitution:0,
@@ -1009,10 +1009,21 @@ function muscles(t,now){
           }
         }
       }
+      /* out of melee reach: pause and fire the special at the rival */
+      const adx=Math.abs(dx);
+      if(adx>range*1.4&&adx<780&&now>t.rangedCd&&now>=t.breathUntil){
+        t.rangedCd=now+randi(2400,4000);
+        const side=Math.sign(dx)||t.facing;
+        if(side!==t.facing){setFacing(t,side);t.flipCd=now+400;}
+        t.breathTarget={x:foe.torso.position.x,
+          y:foe.torso.position.y-foe.bodyH*0.25};
+        t.breathStart=now;t.breathUntil=now+1400;
+        roarFor(t.spec);
+      }
       if(Math.abs(dx)<=range*1.35&&now>t.atkCd){
         const side=Math.sign(dx)||t.facing;
         if(side!==t.facing)setFacing(t,side);
-        if(Math.random()<0.7){
+        if(Math.random()<0.5){
           /* claw / headbutt strike with knockback */
           t.strikeT=now;
           Body.setVelocity(body,{x:body.velocity.x+side*2.5,y:body.velocity.y-1.5});

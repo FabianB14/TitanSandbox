@@ -881,7 +881,7 @@ function spawnTitan(x,key){
   const bodyH=D.standH+D.torsoH/2;
   const t={facing:1,phase:0,walk:0,staggerUntil:0,breathUntil:0,breathTarget:null,grabbed:false,
     bite:null,biteCd:0,flipCd:0,active:true,jawOpen:0,aimTilt:0,
-    hp:100,hurtT:0,atkCd:0,impCd:0,strikeT:0,dead:false,deadAt:0,fadeA:1,hostile:false,
+    hp:100,hurtT:0,atkCd:0,impCd:0,strikeT:0,smashCd:0,dead:false,deadAt:0,fadeA:1,hostile:false,
     spec:spec,D:D,SP:SPRS[key],bodyH:bodyH};
   const b=Bodies.rectangle(x,groundY-bodyH/2,D.torsoW*0.95,bodyH,
     {density:0.0045,friction:0.9,frictionStatic:1,frictionAir:0.02,restitution:0,
@@ -991,6 +991,24 @@ function muscles(t,now){
       const dx=foe.torso.position.x-body.position.x;
       const range=(D.torsoW+foe.D.torsoW)*0.62;
       if(Math.abs(dx)>range)dir=Math.sign(dx);
+      /* a building in the way? smash straight through it */
+      if(dir!==0&&now>t.smashCd){
+        const bx=body.position.x;
+        for(const bl of buildings){
+          if(bl.dead)continue;
+          const toward=Math.sign(bl.x-bx)===dir;
+          const closer=Math.abs(bl.x-bx)<Math.abs(dx);
+          if(!toward||!closer)continue;
+          const gap=Math.abs(bl.x-bx)-bl.halfW-D.torsoW*0.6;
+          if(gap<44){
+            t.smashCd=now+randi(700,1100);
+            t.strikeT=now;
+            smashAt(bx+dir*D.torsoW*0.75,
+              groundY-t.bodyH*rand(0.30,0.70),95);
+            break;
+          }
+        }
+      }
       if(Math.abs(dx)<=range*1.35&&now>t.atkCd){
         const side=Math.sign(dx)||t.facing;
         if(side!==t.facing)setFacing(t,side);
@@ -1723,6 +1741,29 @@ function wreckHeli(b){
   if(hl.wreck)return;
   hl.wreck=true;
   addP({x:b.position.x,y:b.position.y,vx:0,vy:-0.5,life:60,max:60,size:12,type:'smoke'});
+}
+function smashAt(x,y,R){
+  thudSnd(0.5);snapSnd();
+  shake=Math.max(shake,5);
+  dustPuff(x,y,5);
+  const pt={x,y};
+  for(const b of Composite.allBodies(world)){
+    if(b===groundBody)continue;
+    const d=dist(b.position,pt);
+    if(d<R&&b.plugin&&b.plugin.brick){
+      wakeBrick(b);
+      if(!b.isStatic){
+        const f=1-d/R;
+        const dv=Vector.normalise(Vector.sub(b.position,pt));
+        Body.setVelocity(b,{x:b.velocity.x+dv.x*6*f,y:b.velocity.y+dv.y*6*f-2*f});
+      }
+    }
+  }
+  for(const c of breakCons){
+    if(c.plugin.dead)continue;
+    const mid={x:(c.bodyA.position.x+c.bodyB.position.x)/2,y:(c.bodyA.position.y+c.bodyB.position.y)/2};
+    if(dist(mid,pt)<R*0.85)sever(c,true);
+  }
 }
 function miniBoom(x,y,R,dmg){
   shake=Math.min(shake+4,14);

@@ -22,17 +22,30 @@ buildings with his breath.
     breath.
   - **Goliath** — a giant fur-textured ape with long heavy arms and a
     concussive roar that blasts buildings apart with shockwaves.
-  - **Ravok** — a moss-green horned saurian with crimson-glowing fins and a
-    searing crimson breath.
+  - **Ravok** — a giant horned serpent: cobra-raised forebody, flared hood,
+    crimson-glowing spine fins, and a corrosive venom spit that arcs and
+    melts masonry.
+- **Fight mode & HP** — hit Fight and the kaiju brawl: claw strikes,
+  knockback, and ability duels. Every kaiju has 100 HP; explosions, beams,
+  venom, hard impacts, and the military all deal damage. At zero HP they
+  collapse, smoke, and fade away. Distinct roars per species (saurian
+  bellow, ape grunts, serpent hiss).
+- **The military fights back** — from level 2 onward tanks roll in and shell
+  the kaiju, attack helicopters strafe with rockets, and jets scream past
+  dropping bombs. All of them can be crushed, torched, swatted, or blown up.
+- **Wild kaiju** — higher levels sometimes open with a hostile wild kaiju
+  that attacks yours on sight; extra buildings appear with each cycle.
 - **Crumbling buildings** — each building is a grid of individual physics
   bricks joined by breakable constraints; every brick renders its slice of the
   facade (windows, cornices, doorway), so debris looks architectural. Bricks
   char dark when burned, and settled rubble fades away to keep the streets
   clear.
-- **Five levels** — Outskirts, Old Town, Downtown Dusk, Midnight Harbor
-  (stars, moon, lit windows), and Metropolis Dawn, each with its own sky
-  palette and city layout. Level the whole city and the next level rolls in
-  automatically.
+- **Six levels** — Outskirts, Old Town, Downtown Dusk, Midnight Harbor
+  (stars, moon, lit windows), Metropolis Dawn, and Open Bay — a waterfront
+  level with buoyant water, splashes, and boats. Level the whole city and
+  the next level rolls in automatically, growing harder each cycle.
+- **Title screen & UI** — start menu with Start/Exit, collapsible scrolling
+  tool panel, pause while the menu is open.
 - **Tools** — Grab (drag & fling anything), three kaiju spawners (max 3 on
   screen), Building spawn, Bomb (3-second fuse ring, radial blast, screen
   shake, synthesized WebAudio boom), **A-Bomb** (falling warhead, screen-white

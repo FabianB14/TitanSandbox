@@ -48,19 +48,31 @@ buildings with his breath.
     magma boulders. Subterranean rumble.
   - **Umbrax** (store unlock) — a horned void stalker with a violet
     annihilation beam. Hollow wail.
+  - **Cobalt** (store unlock) — a blue atomic saurian with a cobalt-blue
+    breath and an Atomic Pulse ultimate: a huge, bright blast that erupts
+    from its body.
+  - **Boreas** (store unlock) — a four-legged frost titan that prowls the
+    streets on all fours. Its freezing breath locks rivals in ice, and its
+    Permafrost nova flash-freezes everything nearby.
 - **Flight** — winged flyers (Skyrend, Lumen) take off and hover above the
   streets on animated wingbeats, raining their attacks from the air.
+- **Freeze** — Boreas and Fenrix can freeze rival kaiju solid: frozen
+  titans are sheathed in an icy sheen and can't move or attack until they
+  thaw.
 - **Ultimates** — every kaiju has a signature super-attack on a 10s
   cooldown (Ultimate tool, also used by the AI in fights): Overcharge Beam,
   Seismic Slam, Venom Deluge, Meltdown Nova, Sweep Laser, Skyfall Storm,
   Missile Barrage, Cyclone Dive, Prism Cascade, Glacial Howl, Tidal
-  Barrage, Eruption, and Void Collapse.
+  Barrage, Eruption, Void Collapse, Atomic Pulse, and Permafrost. The
+  blast ultimates detonate as big, bright, colour-coded shockwaves that
+  burst straight out of the kaiju's body and sweep the whole block.
 - **Deployable military** — Tank, Heli, Jet Strike, and Ship tools let you
   drop the army in wherever you tap, alongside the automatic defense waves.
 - **Coins & store** — earn coins for crushing buildings, clearing levels,
   winning kaiju fights, wrecking the military, and popping cars; spend them
-  in the in-game store to unlock eight kaiju: Hydrax, Vanguard, Skyrend,
-  Lumen, Fenrix, Krustor, Magnar, and Umbrax (saved on-device).
+  in the in-game store to unlock ten kaiju: Hydrax, Vanguard, Skyrend,
+  Lumen, Fenrix, Krustor, Magnar, Umbrax, Cobalt, and Boreas (saved
+  on-device).
 - **Warships** — on water levels destroyers cruise the bay and shell the
   kaiju alongside the tanks, helicopters, and jets. Cars explode from hard
   impacts, blasts, and beam fire — with chain reactions.
@@ -91,8 +103,8 @@ buildings with his breath.
   mixing breath attacks and ultimates, clearing level after level.
 - **Custom sprites (optional)** — drop PNGs into a `sprites/` folder named
   `<species>_<part>.png` (species: titan, ape, drax, scorn, mecha, hydrax,
-  vang, sky, lum, fen, kru, mag, umb; parts: torso, head, jaw, arm, leg,
-  tail0-2, wings) and the game
+  vang, sky, lum, fen, kru, mag, umb, cob, bor; parts: torso, head, jaw,
+  arm, leg, tail0-2, wings) and the game
   swaps them in over the generated art at load, inheriting the animation
   rig. Only ship art you have the rights to.
 - **Kaiju Forge** — the companion sprite studio at

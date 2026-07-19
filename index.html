@@ -135,6 +135,8 @@
   <button data-tool="kru" id="btnKru"><span class="ico">&#129408;</span>Krustor</button>
   <button data-tool="mag" id="btnMag"><span class="ico">&#127755;</span>Magnar</button>
   <button data-tool="umb" id="btnUmb"><span class="ico">&#127761;</span>Umbrax</button>
+  <button data-tool="cob" id="btnCob"><span class="ico">&#128009;</span>Cobalt</button>
+  <button data-tool="bor" id="btnBor"><span class="ico">&#129482;</span>Boreas</button>
   <button data-tool="building"><span class="ico">&#127970;</span>Building</button>
   <button data-tool="bomb"><span class="ico">&#128163;</span>Bomb</button>
   <button data-tool="nuke"><span class="ico">&#9762;</span>A-Bomb</button>
@@ -200,6 +202,16 @@
       <div class="shopDesc">Void stalker. Violet annihilation beam, Void Collapse ultimate.</div>
       <button class="buyBtn" data-key="umb">BUY — 1000</button>
     </div>
+    <div class="shopItem" id="shopCob">
+      <div class="shopName">&#128009; COBALT</div>
+      <div class="shopDesc">Blue atomic saurian. Cobalt-blue breath and an Atomic Pulse ultimate — a huge bright blast from its body.</div>
+      <button class="buyBtn" data-key="cob">BUY — 1200</button>
+    </div>
+    <div class="shopItem" id="shopBor">
+      <div class="shopName">&#129482; BOREAS</div>
+      <div class="shopDesc">Four-legged frost titan that prowls on all fours. Freezing breath that locks foes in ice, and a Permafrost nova.</div>
+      <button class="buyBtn" data-key="bor">BUY — 1100</button>
+    </div>
     <div id="storeHint">Earn coins by crushing buildings, clearing levels, wrecking the military, and winning kaiju fights.</div>
     <button id="storeClose">CLOSE</button>
   </div>
@@ -254,7 +266,7 @@ engine.gravity.y=1;
 let titans=[],buildings=[],cars=[],bombs=[],nukes=[],particles=[],breakCons=[],allBricks=[];
 let flash=0,LVL=0,LITCH=0.085,banner='',bannerSub='',bannerT=0,levelClearAt=0,paused=true;
 let coins=parseInt(localStorage.getItem('ts_coins')||'0',10)||0;
-const PRICES={hydrax:800,vang:600,sky:700,lum:700,fen:500,kru:500,mag:900,umb:1000};
+const PRICES={hydrax:800,vang:600,sky:700,lum:700,fen:500,kru:500,mag:900,umb:1000,cob:1200,bor:1100};
 const OWN={};
 for(const k in PRICES)OWN[k]=localStorage.getItem('ts_own_'+k)==='1';
 function award(n,x,y){
@@ -699,6 +711,16 @@ const SPECIES={
     fin:['#6d5a86','#4c3c62','#2e2440'],
     pal:{top:'#453b57',mid:'#302740',low:'#1f192c',deep:'#14101d'},
     z:1.04,armL:0.95,legL:1.05,tailZ:1.15,horn:true,fur:false,walk:1.4},
+  cob:{key:'cob',label:'Cobalt',fire:true,novaUlt:true,ultR:460,ultDmg:44,ultChar:0.5,
+    glow:'90,150,255',beam:'130,200,255',
+    fin:['#dfeaff','#a9c6ee','#6f8fc4'],
+    pal:{top:'#5a7bb0',mid:'#3d5788',low:'#293c60',deep:'#182740'},
+    z:1.05,armL:1,legL:1,tailZ:1.05,horn:true,fur:false,walk:1.5},
+  bor:{key:'bor',label:'Boreas',quad:true,frost:true,roar:'howl',novaUlt:true,ultR:440,ultDmg:36,ultChar:0,ultCol:'190,235,255',ultFreeze:true,
+    glow:'170,220,255',beam:'205,240,255',
+    fin:['#f2fbff','#c9e2f2','#8fb3cc'],
+    pal:{top:'#dfeaf2',mid:'#b3c6d6',low:'#7f97ab',deep:'#4f6675'},
+    z:1.12,armL:1,legL:1,tailZ:1.0,horn:true,fur:false,walk:1.5},
 };
 let DIMS={},SPRS={};
 function makeDims(spec){
@@ -716,6 +738,15 @@ function makeDims(spec){
     D.headW=88*s;D.headH=54*s;D.jawW=60*s;D.jawH=16*s;
   }
   D.standH=D.legH+D.torsoH/2-34*s;
+  if(spec.quad){
+    /* four-legged beast: broad low body carried on stocky legs */
+    D.torsoW=150*s;D.torsoH=150*s;
+    D.headW=100*s;D.headH=66*s;
+    D.jawW=68*s;D.jawH=18*s;
+    D.legW=46*s;D.legH=120*s*spec.legL;
+    D.tail=[[104*s,44*s],[92*s,30*s],[80*s,18*s]];
+    D.standH=D.legH*0.58+D.torsoH*0.5;
+  }
   return D;
 }
 function panelTex(g,w,h,s){
@@ -1326,9 +1357,10 @@ function spawnTitan(x,key){
   const bodyH=D.standH+D.torsoH/2;
   const t={facing:1,phase:0,walk:0,staggerUntil:0,breathUntil:0,breathTarget:null,grabbed:false,
     bite:null,biteCd:0,flipCd:0,active:true,jawOpen:0,aimTilt:0,
-    hp:100,hurtT:0,atkCd:0,impCd:0,strikeT:0,smashCd:0,rangedCd:0,ultCd:0,ultWide:false,ult:null,slamAt:0,stormUntil:0,barrage:0,sweepT0:0,ultUntil:0,barrageTarget:null,dead:false,deadAt:0,fadeA:1,hostile:false,
+    hp:100,hurtT:0,atkCd:0,impCd:0,strikeT:0,smashCd:0,rangedCd:0,ultCd:0,ultWide:false,ult:null,slamAt:0,stormUntil:0,barrage:0,sweepT0:0,ultUntil:0,barrageTarget:null,dead:false,deadAt:0,fadeA:1,hostile:false,frozenUntil:0,
     spec:spec,D:D,SP:SPRS[key],bodyH:bodyH};
-  const b=Bodies.rectangle(x,groundY-bodyH/2,D.torsoW*0.95,bodyH,
+  const boxW=spec.quad?D.torsoH*0.98:D.torsoW*0.95;
+  const b=Bodies.rectangle(x,groundY-bodyH/2,boxW,bodyH,
     {density:0.0045,friction:0.9,frictionStatic:1,frictionAir:0.02,restitution:0,
      chamfer:{radius:10*D.s},label:'titan'});
   b.plugin={titan:t,titanPart:true};
@@ -1345,10 +1377,28 @@ function setFacing(t,f){
 }
 function mouthPos(t){
   const D=t.D;
+  if(t.spec.quad){
+    /* head reaches forward off the front of the horizontal body */
+    const q=quadGeom(t);
+    const lx=t.facing*(q.headX+D.headW*0.30);
+    const ly=q.headY+D.headH*0.28;
+    return Vector.add(t.torso.position,rot(t.torso.angle,{x:lx,y:ly}));
+  }
   /* the open mouth: level with the jaw line, not the snout */
   const lx=t.facing*(30*D.s+D.headW*0.34);
   const ly=-t.bodyH/2-D.headH*0.5+8*D.s+D.headH*0.55;
   return Vector.add(t.torso.position,rot(t.torso.angle,{x:lx,y:ly}));
+}
+function quadGeom(t){
+  const D=t.D;
+  /* plant the feet on the actual street line, not the box estimate, so the
+     beast never floats; clamp when airborne so the legs don't stretch away */
+  const groundLocalY=clamp(groundY-t.torso.position.y,t.bodyH*0.34,t.bodyH*0.72);
+  const pivotY=groundLocalY-D.legH*0.80;
+  const bY=pivotY-D.torsoW*0.16;
+  const bodyLen=D.torsoH;
+  return {groundLocalY,pivotY,bY,bodyLen,
+    headX:bodyLen*0.52,headY:bY-D.torsoW*0.02};
 }
 function nudge(b,target,k,max,damp){
   const d=damp!==undefined?damp:0.90;
@@ -1381,6 +1431,13 @@ function applyDamage(t,amt){
   t.hurtT=performance.now();
   if(t.hp<=0)killTitan(t);
 }
+function freeze(t,ms){
+  if(t.dead)return;
+  const now=performance.now();
+  t.frozenUntil=Math.max(t.frozenUntil||0,now+ms);
+  t.staggerUntil=Math.max(t.staggerUntil,now+ms);
+  releaseBite(t);
+}
 function killTitan(t){
   t.dead=true;t.hp=0;
   award(200,t.torso.position.x,t.torso.position.y-t.bodyH*0.6);
@@ -1397,15 +1454,30 @@ function killTitan(t){
   Body.setAngularVelocity(t.torso,(Math.random()<0.5?-1:1)*0.14);
 }
 const ULT_CD=10000;
+/* a big, bright, coloured shockwave that bursts out of the kaiju's body */
+function ultNova(x,y,R,col){
+  col=col||'255,170,70';
+  flash=Math.max(flash,0.32);
+  shake=Math.min(64,shake+34);
+  /* white-hot core + coloured bloom */
+  addP({x,y,vx:0,vy:0,life:24,max:24,size:R*0.42,type:'flash',col:'255,255,255'});
+  addP({x,y,vx:0,vy:0,life:18,max:18,size:R*1.15,type:'flash',col});
+  /* expanding rings sweeping to full radius */
+  for(let k=0;k<3;k++)
+    addP({x,y,vx:0,vy:0,life:30-k*4,max:30-k*4,size:R*0.16+k*R*0.1,
+      grow:R*0.075,lw:12-k*3,type:'ultwave',col});
+  /* radial ember spray in the ult colour */
+  for(let i=0;i<52;i++){
+    const a=rand(0,TAU),sp=rand(4,16);
+    addP({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,life:randi(28,66),max:66,
+      size:rand(2.5,6),type:'ember',col});
+  }
+}
 function ultBlast(t,R,power,dmg,charAmt,col){
   const x=t.torso.position.x,y=Math.min(t.torso.position.y,groundY-20);
-  shake=Math.min(55,shake+42);boom();
-  addP({x,y,vx:0,vy:0,life:12,max:12,size:R*0.8,type:'flash'});
-  for(let i=0;i<36;i++){
-    const a=rand(0,TAU),sp=rand(3,11);
-    addP({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:randi(24,60),max:60,
-      size:rand(2,5),type:'ember',col});
-  }
+  boom();
+  /* the boom now bursts from the kaiju's body, big and bright */
+  ultNova(x,Math.min(t.torso.position.y-t.bodyH*0.24,groundY-40),R,col);
   for(let i=0;i<16;i++)
     addP({x:x+rand(-R*0.4,R*0.4),y:groundY-6,vx:rand(-2,2),vy:rand(-2,-0.5),
       life:randi(40,80),max:80,size:rand(10,24),type:'dust'});
@@ -1481,7 +1553,7 @@ function triggerUlt(t,target){
     toast('VENOM DELUGE');
   }else if(k==='scorn'){
     flash=Math.max(flash,0.5);
-    ultBlast(t,320,20,40,0.8,'190,120,255');
+    ultBlast(t,420,22,44,0.8,'190,120,255');
     toast('MELTDOWN NOVA');
   }else if(k==='mecha'){
     t.ult='sweep';t.sweepT0=now;t.ultUntil=now+1700;t.ultWide=true;
@@ -1510,11 +1582,11 @@ function triggerUlt(t,target){
     t.breathTarget={x:target.x,y:target.y};
     toast('PRISM CASCADE');
   }else if(k==='fen'){
-    flash=Math.max(flash,0.35);
-    ultBlast(t,330,18,32,0,'190,235,255');
+    flash=Math.max(flash,0.4);
+    ultBlast(t,430,18,34,0,'190,235,255');
     for(const o of titans)
-      if(o!==t&&!o.dead&&dist(o.torso.position,t.torso.position)<520)
-        o.staggerUntil=now+2600;
+      if(o!==t&&!o.dead&&dist(o.torso.position,t.torso.position)<560)
+        freeze(o,2800);
     toast('GLACIAL HOWL');
   }else if(k==='kru'){
     const m=mouthPos(t);
@@ -1526,16 +1598,25 @@ function triggerUlt(t,target){
     t.jawOpen=0.5;
     toast('TIDAL BARRAGE');
   }else if(k==='mag'){
-    flash=Math.max(flash,0.4);
-    ultBlast(t,330,20,38,0.7,'255,140,50');
-    for(let i=0;i<14;i++)
-      projs.push({x:t.torso.position.x+rand(-420,420),y:-40-rand(0,220),
+    flash=Math.max(flash,0.45);
+    ultBlast(t,440,22,40,0.7,'255,140,50');
+    for(let i=0;i<16;i++)
+      projs.push({x:t.torso.position.x+rand(-460,460),y:-40-rand(0,220),
         vx:rand(-1,1),vy:rand(2,5),type:'magma',life:280});
     toast('ERUPTION');
   }else if(k==='umb'){
-    flash=Math.max(flash,0.5);
-    ultBlast(t,340,22,40,0.55,'220,90,255');
+    flash=Math.max(flash,0.55);
+    ultBlast(t,470,24,44,0.55,'220,90,255');
     toast('VOID COLLAPSE');
+  }else if(t.spec.novaUlt){
+    /* generic body-burst nova (Cobalt, Boreas) */
+    flash=Math.max(flash,0.5);
+    ultBlast(t,t.spec.ultR||440,22,t.spec.ultDmg||42,t.spec.ultChar||0,t.spec.ultCol||t.spec.beam);
+    if(t.spec.ultFreeze)
+      for(const o of titans)
+        if(o!==t&&!o.dead&&dist(o.torso.position,t.torso.position)<(t.spec.ultR||440)*1.3)
+          freeze(o,3000);
+    toast(k==='cob'?'ATOMIC PULSE':k==='bor'?'PERMAFROST':'ULTIMATE');
   }
 }
 function ultStep(t,now){
@@ -1902,6 +1983,7 @@ function breathStep(t,now){
     }
     if(b.plugin&&b.plugin.titanPart&&b.plugin.titan!==t){
       applyDamage(b.plugin.titan,(fire?0.55:0.45)*f*(wide?1.8:1));
+      if(t.spec.frost)freeze(b.plugin.titan,500);
     }
     if(fire&&b.plugin&&b.plugin.car&&!b.plugin.boat&&!b.plugin.burnAt){
       b.plugin.burnAt=now+900;
@@ -3015,6 +3097,7 @@ function stepParticles(){
     else if(p.type==='debris'){p.vy+=0.32;p.rot+=p.vr;
       if(p.y>groundY-2){p.y=groundY-2;p.vy*=-0.3;p.vx*=0.7;}}
     else if(p.type==='shock'){p.size*=1.16;p.vx*=0.9;p.vy*=0.9;}
+    else if(p.type==='ultwave'){p.size+=(p.grow||6);}
     else if(p.type==='splash'){p.vy+=0.22;}
     else if(p.type==='coin'){p.vy*=0.97;}
     else if(p.type==='nukestem'){p.vy*=0.996;p.vx*=0.985;p.size*=1.008;}
@@ -3069,12 +3152,23 @@ function drawParticles(){
       ctx.restore();
     }else if(p.type==='flash'){
       ctx.globalCompositeOperation='lighter';
+      const cc=p.col||'255,150,60';
       const gr=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size);
-      gr.addColorStop(0,`rgba(255,240,200,${(a*0.95).toFixed(3)})`);
-      gr.addColorStop(0.5,`rgba(255,150,60,${(a*0.5).toFixed(3)})`);
-      gr.addColorStop(1,'rgba(255,90,30,0)');
+      gr.addColorStop(0,`rgba(255,255,245,${(a*0.95).toFixed(3)})`);
+      gr.addColorStop(0.5,`rgba(${cc},${(a*0.5).toFixed(3)})`);
+      gr.addColorStop(1,`rgba(${cc},0)`);
       ctx.fillStyle=gr;
       ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.fill();
+      ctx.globalCompositeOperation='source-over';
+    }else if(p.type==='ultwave'){
+      ctx.globalCompositeOperation='lighter';
+      const cc=p.col||'255,180,80';
+      ctx.strokeStyle=`rgba(${cc},${(a*0.85).toFixed(3)})`;
+      ctx.lineWidth=Math.max(1,(p.lw||8)*a+2);
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.stroke();
+      ctx.strokeStyle=`rgba(255,255,255,${(a*0.5).toFixed(3)})`;
+      ctx.lineWidth=Math.max(1,((p.lw||8)*a+2)*0.4);
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.stroke();
       ctx.globalCompositeOperation='source-over';
     }
   }
@@ -3373,6 +3467,82 @@ function drawTitanReal(t,now){
     ctx.restore();
     dp(SP.head,0,0);
     ctx.restore();
+  }else if(t.spec.quad){
+    /* ================= QUADRUPED (Boreas) ================= */
+    const q=quadGeom(t),bY=q.bY,pivotY=q.pivotY,bodyLen=q.bodyLen;
+    const gaitL=(o)=>Math.sin(t.phase+o)*0.46*t.walk;
+    const quadLeg=(px,ang,spr,sc)=>{
+      ctx.fillStyle=pal.mid;
+      ctx.beginPath();ctx.arc(px,pivotY,D.legW*0.42,0,TAU);ctx.fill();
+      ctx.save();ctx.translate(px,pivotY);ctx.rotate(ang);
+      if(sc)ctx.scale(sc,sc);
+      dp(spr,0,D.legH*0.40);
+      ctx.restore();
+    };
+    /* tail trailing off the back */
+    const tailSpr=[SP.tail0,SP.tail1,SP.tail2];
+    ctx.save();
+    ctx.translate(-bodyLen*0.46,bY-D.torsoW*0.04);
+    for(let i=0;i<3;i++){
+      ctx.rotate(-(0.05+0.05*i)+Math.sin(now/520+i)*0.05+Math.sin(t.phase-i*0.5)*0.05*t.walk);
+      dp(tailSpr[i],-D.tail[i][0]*0.42,0);
+      ctx.translate(-D.tail[i][0]*0.84,0);
+    }
+    ctx.restore();
+    /* far legs (diagonal gait): back-far pairs with front-near */
+    quadLeg(-bodyLen*0.28,gaitL(Math.PI),SP.legFar,0.92);
+    quadLeg(bodyLen*0.34,gaitL(0),SP.legFar,0.92);
+    /* body: torso stood on its side so the dorsal fins ride the spine up top */
+    ctx.save();
+    ctx.translate(0,bY);
+    ctx.rotate(-Math.PI/2);
+    dp(SP.torso,0,0);
+    ctx.restore();
+    /* near legs */
+    quadLeg(-bodyLen*0.34,gaitL(0),SP.leg,1);
+    quadLeg(bodyLen*0.28,gaitL(Math.PI),SP.leg,1);
+    /* neck: a short tapered fill from shoulders up to the head */
+    const hX=q.headX,hY=q.headY;
+    {
+      const ax2=bodyLen*0.30,ay2=bY-D.torsoW*0.18;
+      const ddx=hX-ax2,ddy=hY-ay2,len=Math.hypot(ddx,ddy)||1;
+      const px2=-ddy/len,py2=ddx/len,wA=22*s,wB=16*s;
+      const ng=ctx.createLinearGradient(ax2,ay2,hX,hY);
+      ng.addColorStop(0,pal.mid);ng.addColorStop(1,pal.low);
+      ctx.fillStyle=ng;
+      ctx.beginPath();
+      ctx.moveTo(ax2+px2*wA,ay2+py2*wA);
+      ctx.quadraticCurveTo((ax2+hX)/2+px2*(wA+4*s),(ay2+hY)/2+py2*(wA+4*s),hX+px2*wB,hY+py2*wB);
+      ctx.lineTo(hX-px2*wB,hY-py2*wB);
+      ctx.quadraticCurveTo((ax2+hX)/2-px2*(wB+3*s),(ay2+hY)/2-py2*(wB+3*s),ax2-px2*wA,ay2-py2*wA);
+      ctx.closePath();ctx.fill();
+    }
+    /* head group aimed forward and slightly down */
+    ctx.save();
+    ctx.translate(hX,hY);
+    ctx.rotate(0.16+Math.sin(t.phase+0.6)*0.03*t.walk+t.aimTilt*(breathing?1:0.25)
+      +(now-t.strikeT<220?-0.4*(1-(now-t.strikeT)/220):0));
+    ctx.save();
+    ctx.translate(-D.headW*0.16,D.headH*0.36);
+    ctx.rotate(t.jawOpen);
+    dp(SP.jaw,D.jawW*0.34,5*s);
+    ctx.restore();
+    dp(SP.head,0,0);
+    ctx.restore();
+    /* dorsal glow along the spine */
+    if(t.spec.glow){
+      const gcol=breathing&&t.spec.beam?t.spec.beam:t.spec.glow;
+      const pulse=0.05+0.035*Math.sin(now/240)+(breathing?0.12:0);
+      ctx.globalCompositeOperation='lighter';
+      for(const px of [-bodyLen*0.3,0,bodyLen*0.3]){
+        const gy=bY-D.torsoW*0.42;
+        const gr=ctx.createRadialGradient(px,gy,0,px,gy,32*s);
+        gr.addColorStop(0,`rgba(${gcol},${pulse.toFixed(3)})`);
+        gr.addColorStop(1,`rgba(${gcol},0)`);
+        ctx.fillStyle=gr;ctx.beginPath();ctx.arc(px,gy,32*s,0,TAU);ctx.fill();
+      }
+      ctx.globalCompositeOperation='source-over';
+    }
   }else{
   /* wings behind everything (winged kaiju) */
   if(t.spec.wings&&SP.wings){
@@ -3484,8 +3654,8 @@ function drawTitanReal(t,now){
   dp(SP.head,0,0);
   ctx.restore();
   }
-  /* living glow along the spine (bipeds; serpent glows per segment) */
-  if(t.spec.glow&&!t.spec.serpent){
+  /* living glow along the spine (bipeds; serpent + quad glow themselves) */
+  if(t.spec.glow&&!t.spec.serpent&&!t.spec.quad){
     const gcol=breathing&&t.spec.beam?t.spec.beam:t.spec.glow;
     const pulse=0.05+0.035*Math.sin(now/240)+(breathing?0.12:0);
     ctx.globalCompositeOperation='lighter';
@@ -3504,6 +3674,24 @@ function drawTitanReal(t,now){
     ctx.globalCompositeOperation='source-over';
   }
   ctx.restore();
+  /* frozen: icy sheen + drifting frost flecks over the body */
+  if(now<t.frozenUntil&&!t.dead){
+    const bx=body.position.x,by=body.position.y;
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    const gr=ctx.createRadialGradient(bx,by,0,bx,by,D.torsoW*1.1);
+    gr.addColorStop(0,'rgba(200,235,255,0.30)');
+    gr.addColorStop(1,'rgba(150,205,245,0)');
+    ctx.fillStyle=gr;
+    ctx.beginPath();ctx.arc(bx,by,D.torsoW*1.1,0,TAU);ctx.fill();
+    ctx.globalCompositeOperation='source-over';
+    for(let i=0;i<3;i++){
+      const fx=bx+rand(-D.torsoW*0.6,D.torsoW*0.6),fy=by+rand(-t.bodyH*0.5,t.bodyH*0.4);
+      ctx.fillStyle='rgba(235,248,255,0.8)';
+      ctx.beginPath();ctx.arc(fx,fy,rand(1,2.4)*s,0,TAU);ctx.fill();
+    }
+    ctx.restore();
+  }
   /* breath visuals (world frame) */
   if(breathing&&t.lastAim){
     const m=t.lastMouth,aim=t.lastAim;
@@ -3687,7 +3875,7 @@ function loadLevel(i){
   /* higher levels: a wild kaiju may crash the party */
   if(i>=2&&titans.length<3&&Math.random()<Math.min(0.25+i*0.08,0.8)){
     const wt=spawnTitan(Math.random()<0.5?150:W-150,
-      pick(['titan','ape','drax','scorn','mecha','hydrax','vang','sky','lum','fen','kru','mag','umb']));
+      pick(['titan','ape','drax','scorn','mecha','hydrax','vang','sky','lum','fen','kru','mag','umb','cob','bor']));
     if(wt){wt.hostile=true;toast('A wild '+wt.spec.label+' appears!');}
   }
   banner='LEVEL '+(i+1);bannerSub=L.name;bannerT=170;
@@ -3722,7 +3910,8 @@ document.querySelectorAll('#panel button[data-tool]').forEach(btn=>{
 });
 const STORE_IDS={hydrax:['shopHydrax','btnHydrax'],vang:['shopVang','btnVang'],
   sky:['shopSky','btnSky'],lum:['shopLum','btnLum'],fen:['shopFen','btnFen'],
-  kru:['shopKru','btnKru'],mag:['shopMag','btnMag'],umb:['shopUmb','btnUmb']};
+  kru:['shopKru','btnKru'],mag:['shopMag','btnMag'],umb:['shopUmb','btnUmb'],
+  cob:['shopCob','btnCob'],bor:['shopBor','btnBor']};
 function updateStoreUI(){
   const cc=document.getElementById('coinCount');
   if(cc)cc.textContent=coins.toLocaleString();

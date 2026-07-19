@@ -31,8 +31,11 @@ buildings with his breath.
   - **Meka** — a giant robot kaiju: riveted gunmetal armor with panel lines,
     a glowing reactor core, visor eye, beacon antenna, angular metal fins,
     and a cyan laser. Klaxon roar.
-  - **Hydrax** (store unlock) — a golden three-headed dragon with wings and
-    forked lightning that slams around its target. Cackling triple screech.
+  - **Hydrax** (store unlock) — a radiant gold three-headed dragon: each
+    head wears a fanned crown of backswept horns, big golden membranous
+    wings spread from its back, dark tiger-striped banding rakes its limbs
+    and twin-tipped tail, and forked lightning slams around its target.
+    Cackling triple screech.
   - **Vanguard** (store unlock) — a hero mech in white armor with a gold
     V-crest, red intakes, and a rapid plasma rifle.
   - **Skyrend** (store unlock) — a crimson flying wyvern that hovers on

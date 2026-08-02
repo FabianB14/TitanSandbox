@@ -138,6 +138,16 @@ buildings with his breath.
   Reset. The breath is aimed: tap where you want the beam and hold-drag to
   sweep it. The Titan fires an atomic-blue beam, Ravok a crimson one, and
   Goliath a concussive shockwave roar.
+- **Online co-op (2 players)** — Menu → 🌐 CO-OP. One player taps HOST A
+  GAME and gets a 5-letter room code; the friend taps CO-OP, enters the
+  code, and JOINs from their own device. The connection is peer-to-peer
+  (WebRTC via PeerJS's free public signaling — no accounts, no server to
+  run). Kaiju spawns, buildings, bombs, nukes, military drops, aimed
+  breath, ultimates, Fight/Auto, resets, and level changes are all
+  mirrored live; the host keeps both worlds' kaiju in step. Each player
+  keeps their own coins. Fine print: rubble and cars may settle slightly
+  differently on each screen, and grabbing/flinging is local to your own
+  view.
 - Works with mouse and touch, sized for tablets, and installable as an app
   (PWA manifest + service worker — open the site and use "Add to Home
   Screen" / the install prompt; it also works offline after the first

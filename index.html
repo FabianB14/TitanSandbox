@@ -70,6 +70,26 @@
   #store{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
     background:rgba(10,10,16,0.82);backdrop-filter:blur(4px);}
   #store.hidden{display:none;}
+  #coop{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+    background:rgba(10,10,16,0.82);backdrop-filter:blur(4px);}
+  #coop.hidden{display:none;}
+  #coopCard{background:rgba(24,26,32,0.96);border:1px solid rgba(110,190,255,0.4);
+    border-radius:18px;padding:24px 28px;max-width:420px;width:calc(100vw - 40px);
+    text-align:center;box-shadow:0 12px 44px rgba(0,0,0,0.6);}
+  #coopTitle{font-size:22px;font-weight:900;letter-spacing:5px;color:#7ec4ff;
+    text-shadow:0 0 18px rgba(110,190,255,0.4);}
+  #coopStatus{color:rgba(220,226,236,0.85);font-size:13.5px;margin:12px 0;line-height:1.5;}
+  #coopCode{font-size:34px;font-weight:900;letter-spacing:10px;color:#ffcd5a;margin:10px 0;
+    text-shadow:0 0 16px rgba(255,180,50,0.45);}
+  #coopCode.hidden,#coopLeave.hidden{display:none;}
+  #coopCard button{appearance:none;cursor:pointer;border-radius:10px;padding:11px 18px;
+    font-weight:800;letter-spacing:1.5px;font-size:13px;margin:6px 4px;
+    background:rgba(110,190,255,0.15);border:1px solid rgba(110,190,255,0.5);color:#cfe8ff;}
+  #coopCard button:active{transform:scale(0.97);}
+  #joinCode{width:120px;text-align:center;font-size:20px;font-weight:800;letter-spacing:5px;
+    padding:9px 6px;border-radius:10px;border:1px solid rgba(255,255,255,0.3);
+    background:rgba(12,14,18,0.9);color:#f0e6d2;text-transform:uppercase;}
+  #coopHint{color:rgba(200,206,216,0.55);font-size:11.5px;margin-top:12px;line-height:1.5;}
   #storeCard{background:rgba(24,26,32,0.96);border:1px solid rgba(255,205,90,0.35);
     border-radius:18px;padding:22px 26px;max-width:520px;width:calc(100vw - 40px);
     max-height:calc(100vh - 60px);overflow-y:auto;
@@ -225,11 +245,27 @@
     <button id="storeClose">CLOSE</button>
   </div>
 </div>
+<div id="coop" class="hidden">
+  <div id="coopCard">
+    <div id="coopTitle">&#127760; CO-OP</div>
+    <div id="coopStatus">Play with a friend over the internet. One of you hosts, the other joins with the room code.</div>
+    <div id="coopCode" class="hidden"></div>
+    <button id="hostBtn">HOST A GAME</button>
+    <div id="joinRow">
+      <input id="joinCode" maxlength="5" placeholder="CODE" autocomplete="off">
+      <button id="joinBtn">JOIN</button>
+    </div>
+    <button id="coopLeave" class="hidden">LEAVE CO-OP</button>
+    <button id="coopClose">CLOSE</button>
+    <div id="coopHint">Both players smash the same city: kaiju, bombs, breath, and ults are shared. Rubble may settle a little differently on each screen.</div>
+  </div>
+</div>
 <div id="menu">
   <div id="menuCard">
     <div id="menuTitle">TITAN<br>SANDBOX</div>
     <div id="menuTag">Stomp. Burn. Level the city.</div>
     <button id="startBtn">&#9655;&nbsp; START</button>
+    <button id="coopBtn">&#127760;&nbsp; CO-OP</button>
     <button id="installBtn" style="display:none">&#10515;&nbsp; INSTALL APP</button>
     <button id="exitBtn">&#10005;&nbsp; EXIT</button>
     <div id="menuTip">Tip: use your browser's "Add to Home Screen" to install and play fullscreen.</div>
@@ -238,6 +274,7 @@
 <div id="hint">Grab: drag &amp; fling anything &bull; Breath: tap &amp; hold to aim the beam &bull; Level the city to advance</div>
 <div id="toast"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 <script>
 'use strict';
 /* ============================================================
@@ -2406,6 +2443,8 @@ function buildingSweep(){
   }
 }
 function levelCheck(){
+  /* in co-op the host decides when the level rolls over */
+  if(netOn()&&NET.role==='guest')return;
   if(buildings.length&&buildings.every(b=>b.dead)){
     if(!levelClearAt){
       levelClearAt=performance.now();
@@ -2413,6 +2452,7 @@ function levelCheck(){
       award(300,W/2,H*0.5);
     }else if(performance.now()-levelClearAt>3400){
       loadLevel(LVL+1);
+      netSend({t:'level',i:LVL});
     }
   }else levelClearAt=0;
 }
@@ -4179,11 +4219,16 @@ function loadLevel(i){
   for(let k=0;k<L.cars;k++)spawnCar(W*rand(0.28,carMaxX));
   if(L.boats)for(let k=0;k<L.boats;k++)
     spawnBoat(W*rand(L.water+0.06,0.95));
-  /* higher levels: a wild kaiju may crash the party */
-  if(i>=2&&titans.length<3&&Math.random()<Math.min(0.25+i*0.08,0.8)){
-    const wt=spawnTitan(Math.random()<0.5?150:W-150,
+  /* higher levels: a wild kaiju may crash the party (host decides in co-op) */
+  if(i>=2&&titans.length<3&&(!netOn()||NET.role==='host')&&
+     Math.random()<Math.min(0.25+i*0.08,0.8)){
+    const wx=Math.random()<0.5?150:W-150;
+    const wt=spawnTitan(wx,
       pick(['titan','ape','drax','scorn','mecha','hydrax','vang','sky','lum','fen','kru','mag','umb','cob','bor']));
-    if(wt){wt.hostile=true;toast('A wild '+wt.spec.label+' appears!');}
+    if(wt){
+      wt.hostile=true;toast('A wild '+wt.spec.label+' appears!');
+      netSend({t:'spawn',key:wt.spec.key,nx:nx2(wx),hostile:1});
+    }
   }
   banner='LEVEL '+(i+1);bannerSub=L.name;bannerT=170;
   levelClearAt=0;
@@ -4197,6 +4242,195 @@ function resetWorld(){
   loadLevel(0);
   spawnTitan(W*0.22,'titan');
 }
+
+/* ============================================================
+   CO-OP — peer-to-peer over WebRTC (PeerJS + free public signaling).
+   Host-authoritative-ish: every player's actions (spawns, tools,
+   breath, ults, toggles) are mirrored on both sides; the host also
+   streams kaiju corrections so the monsters stay aligned. Positions
+   travel normalized (x/W, height above ground / H) so different
+   screen sizes agree about where things happen.
+   ============================================================ */
+const NET={peer:null,conn:null,role:null,lastSync:0,lastSweep:0};
+const nx2=x=>x/W, ny2=y=>(groundY-y)/H;
+const fx2=nx=>nx*W, fy2=ny=>groundY-ny*H;
+function coopStatus(msg){const el=document.getElementById('coopStatus');if(el)el.textContent=msg;}
+function coopUI(){
+  const on=!!(NET.conn&&NET.conn.open);
+  document.getElementById('hostBtn').style.display=on||NET.peer?'none':'';
+  document.getElementById('joinRow').style.display=on||NET.peer?'none':'';
+  document.getElementById('coopLeave').classList.toggle('hidden',!on&&!NET.peer);
+}
+function coopHost(){
+  if(typeof Peer==='undefined'){coopStatus('Multiplayer library failed to load — check your internet connection and reload.');return;}
+  const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let code='';for(let i=0;i<5;i++)code+=A[Math.floor(Math.random()*A.length)];
+  coopStatus('Opening room…');
+  NET.peer=new Peer('titan-sandbox-'+code);
+  NET.peer.on('open',()=>{
+    document.getElementById('coopCode').textContent=code;
+    document.getElementById('coopCode').classList.remove('hidden');
+    coopStatus('Room open! Your friend taps CO-OP → enters this code → JOIN.');
+    coopUI();
+  });
+  NET.peer.on('connection',c=>{
+    if(NET.conn){c.close();return;}
+    NET.conn=c;NET.role='host';
+    wireConn();
+  });
+  NET.peer.on('error',e=>{coopStatus('Connection error ('+(e.type||e)+'). Close and try again.');});
+  coopUI();
+}
+function coopJoin(code){
+  if(typeof Peer==='undefined'){coopStatus('Multiplayer library failed to load — check your internet connection and reload.');return;}
+  code=(code||'').trim().toUpperCase();
+  if(code.length<4){coopStatus('Enter the 5-letter room code first.');return;}
+  coopStatus('Connecting to room '+code+'…');
+  NET.peer=new Peer();
+  NET.peer.on('open',()=>{
+    NET.conn=NET.peer.connect('titan-sandbox-'+code,{reliable:true});
+    NET.role='guest';
+    wireConn();
+  });
+  NET.peer.on('error',e=>{coopStatus('Could not reach room '+code+' ('+(e.type||e)+'). Check the code and try again.');});
+  coopUI();
+}
+function coopLeave(){
+  try{if(NET.conn)NET.conn.close();}catch(e){}
+  try{if(NET.peer)NET.peer.destroy();}catch(e){}
+  NET.conn=null;NET.peer=null;NET.role=null;
+  document.getElementById('coopCode').classList.add('hidden');
+  coopStatus('Left co-op. Play with a friend over the internet.');
+  coopUI();
+}
+function wireConn(){
+  NET.conn.on('open',()=>{
+    coopStatus('Connected! Smash the city together.');
+    toast('CO-OP CONNECTED');
+    coopUI();
+    if(NET.role==='host'){
+      netSend({t:'reset'});
+      resetWorld();
+    }
+    closeCoop();closeMenu();
+  });
+  NET.conn.on('data',d=>{try{applyNet(d);}catch(e){}});
+  NET.conn.on('close',()=>{
+    NET.conn=null;NET.role=null;
+    toast('Co-op partner left');
+    coopStatus('Partner disconnected. Host or join to play again.');
+    coopUI();
+  });
+  NET.conn.on('error',()=>{});
+}
+function netSend(m){
+  if(NET.conn&&NET.conn.open){try{NET.conn.send(m);}catch(e){}}
+}
+function netOn(){return !!(NET.conn&&NET.conn.open);}
+function applyNet(m){
+  const now=performance.now();
+  switch(m.t){
+    case 'reset':
+      fightMode=false;autoMode=false;
+      document.getElementById('fightBtn').classList.remove('active');
+      document.getElementById('autoBtn').classList.remove('active');
+      resetWorld();paused=false;
+      document.getElementById('menu').classList.add('hidden');
+      document.body.classList.remove('menu-open');
+      break;
+    case 'spawn':{
+      const t2=spawnTitan(clamp(fx2(m.nx),120,W-120),m.key);
+      if(t2&&m.hostile)t2.hostile=true;
+      break;}
+    case 'tool':{
+      const x=clamp(fx2(m.nx),40,W-40);
+      if(m.tool==='building')spawnBuilding(x);
+      else if(m.tool==='bomb')spawnBomb(x,Math.min(fy2(m.ny),groundY-16));
+      else if(m.tool==='nuke')spawnNuke(x);
+      else if(m.tool==='car')spawnCar(x);
+      else if(m.tool==='tank')spawnTank(x);
+      else if(m.tool==='heli')spawnHeli(x);
+      else if(m.tool==='jet')spawnJet(x);
+      else if(m.tool==='ship')spawnShip(x);
+      break;}
+    case 'breath':{
+      const t2=titans[m.ti];
+      if(t2&&!t2.dead){
+        const p={x:fx2(m.nx),y:fy2(m.ny)};
+        setFacing(t2,p.x>t2.torso.position.x?1:-1);
+        t2.breathTarget=p;t2.breathStart=now;t2.breathUntil=now+1400;
+        t2.pickFlash=now;releaseBite(t2);roarFor(t2.spec);
+      }
+      break;}
+    case 'sweep':{
+      const t2=titans[m.ti];
+      if(t2&&now<t2.breathUntil){
+        t2.breathTarget={x:fx2(m.nx),y:fy2(m.ny)};
+        t2.breathUntil=Math.min(now+300,t2.breathStart+4000);
+      }
+      break;}
+    case 'ult':{
+      const t2=titans[m.ti];
+      if(t2)triggerUlt(t2,{x:fx2(m.nx),y:fy2(m.ny)});
+      break;}
+    case 'fight':
+      fightMode=m.on;
+      document.getElementById('fightBtn').classList.toggle('active',fightMode);
+      toast(fightMode?'KAIJU BATTLE!':'Truce');
+      break;
+    case 'auto':
+      autoMode=m.on;
+      document.getElementById('autoBtn').classList.toggle('active',autoMode);
+      break;
+    case 'level':
+      if(NET.role==='guest')loadLevel(m.i);
+      break;
+    case 'sync':applySync(m);break;
+  }
+}
+function applySync(m){
+  /* guest: follow the host's kaiju roster and positions */
+  if(NET.role!=='guest')return;
+  const match=m.k.length===titans.length&&m.k.every((row,i)=>titans[i]&&titans[i].spec.key===row.k);
+  if(!match){
+    for(const t of [...titans])removeTitan(t);
+    for(const row of m.k){
+      const t2=spawnTitan(clamp(fx2(row.nx),60,W-60),row.k);
+      if(t2&&row.ho)t2.hostile=true;
+    }
+  }
+  for(let i=0;i<m.k.length&&i<titans.length;i++){
+    const row=m.k[i],t2=titans[i];
+    const px=fx2(row.nx),py=fy2(row.ny);
+    const d=dist(t2.torso.position,{x:px,y:py});
+    if(d>160)Body.setPosition(t2.torso,{x:px,y:py});
+    else if(d>18)Body.setPosition(t2.torso,{
+      x:t2.torso.position.x+(px-t2.torso.position.x)*0.5,
+      y:t2.torso.position.y+(py-t2.torso.position.y)*0.5});
+    t2.facing=row.f;
+    t2.hp=row.hp;
+    if(row.d&&!t2.dead)killTitan(t2);
+  }
+}
+function netSync(){
+  if(!netOn()||NET.role!=='host')return;
+  const now=performance.now();
+  if(now-NET.lastSync<600)return;
+  NET.lastSync=now;
+  netSend({t:'sync',k:titans.map(t=>({k:t.spec.key,
+    nx:nx2(t.torso.position.x),ny:ny2(t.torso.position.y),
+    f:t.facing,hp:Math.round(t.hp),d:t.dead?1:0,ho:t.hostile?1:0}))});
+}
+function openCoop(){paused=true;document.getElementById('coop').classList.remove('hidden');coopUI();}
+function closeCoop(){
+  document.getElementById('coop').classList.add('hidden');
+  if(document.getElementById('menu').classList.contains('hidden'))paused=false;
+}
+document.getElementById('coopBtn').addEventListener('click',()=>{audio();openCoop();});
+document.getElementById('coopClose').addEventListener('click',closeCoop);
+document.getElementById('hostBtn').addEventListener('click',()=>coopHost());
+document.getElementById('joinBtn').addEventListener('click',()=>coopJoin(document.getElementById('joinCode').value));
+document.getElementById('coopLeave').addEventListener('click',coopLeave);
 
 /* ============================================================
    INPUT
@@ -4379,6 +4613,7 @@ document.getElementById('autoBtn').addEventListener('click',()=>{
   autoMode=!autoMode;
   document.getElementById('autoBtn').classList.toggle('active',autoMode);
   toast(autoMode?'AUTO RAMPAGE ON — kaiju will level the city themselves':'Auto off');
+  netSend({t:'auto',on:autoMode});
 });
 document.getElementById('fightBtn').addEventListener('click',()=>{
   audio();
@@ -4388,12 +4623,14 @@ document.getElementById('fightBtn').addEventListener('click',()=>{
     const alive=titans.filter(t=>!t.dead).length;
     toast(alive>=2?'KAIJU BATTLE!':'Spawn a second kaiju to brawl');
   }else toast('Truce');
+  netSend({t:'fight',on:fightMode});
 });
 document.getElementById('resetBtn').addEventListener('click',()=>{
   audio();
   fightMode=false;
   document.getElementById('fightBtn').classList.remove('active');
   resetWorld();
+  netSend({t:'reset'});
 });
 function evPos(e){
   const r=cv.getBoundingClientRect();
@@ -4431,21 +4668,29 @@ cv.addEventListener('pointerdown',e=>{
     if(b.plugin&&b.plugin.titan)b.plugin.titan.grabbed=true;
     cv.setPointerCapture(e.pointerId);
   }
-  else if(tool==='titan')spawnTitan(clamp(p.x,120,W-120),'titan');
-  else if(tool==='ape')spawnTitan(clamp(p.x,120,W-120),'ape');
-  else if(tool==='drax')spawnTitan(clamp(p.x,120,W-120),'drax');
-  else if(tool==='scorn')spawnTitan(clamp(p.x,120,W-120),'scorn');
-  else if(tool==='mecha')spawnTitan(clamp(p.x,120,W-120),'mecha');
+  else if(SPECIES[tool]&&PRICES[tool]===undefined){
+    if(spawnTitan(clamp(p.x,120,W-120),tool))
+      netSend({t:'spawn',key:tool,nx:nx2(p.x)});
+  }
   else if(PRICES[tool]!==undefined){
-    if(OWN[tool])spawnTitan(clamp(p.x,120,W-120),tool);
+    if(OWN[tool]){
+      if(spawnTitan(clamp(p.x,120,W-120),tool))
+        netSend({t:'spawn',key:tool,nx:nx2(p.x)});
+    }
     else{openStore();toast(SPECIES[tool].label+' must be purchased first');}
   }
-  else if(tool==='nuke')spawnNuke(p.x);
-  else if(tool==='building')spawnBuilding(p.x);
-  else if(tool==='bomb')spawnBomb(p.x,Math.min(p.y,groundY-16));
+  else if(tool==='nuke'){spawnNuke(p.x);netSend({t:'tool',tool:'nuke',nx:nx2(p.x)});}
+  else if(tool==='building'){spawnBuilding(p.x);netSend({t:'tool',tool:'building',nx:nx2(p.x)});}
+  else if(tool==='bomb'){
+    spawnBomb(p.x,Math.min(p.y,groundY-16));
+    netSend({t:'tool',tool:'bomb',nx:nx2(p.x),ny:ny2(Math.min(p.y,groundY-16))});
+  }
   else if(tool==='breath'){
     const t=triggerBreath(p);
-    if(t){breathHold=t;cv.setPointerCapture(e.pointerId);}
+    if(t){
+      breathHold=t;cv.setPointerCapture(e.pointerId);
+      netSend({t:'breath',ti:titans.indexOf(t),nx:nx2(p.x),ny:ny2(p.y)});
+    }
   }
   else if(tool==='ult'){
     let best=null,bd=1e9;
@@ -4454,14 +4699,16 @@ cv.addEventListener('pointerdown',e=>{
       const d=dist(t.torso.position,p);
       if(d<bd){bd=d;best=t;}
     }
-    if(best)triggerUlt(best,p);
+    if(best){
+      triggerUlt(best,p);
+      netSend({t:'ult',ti:titans.indexOf(best),nx:nx2(p.x),ny:ny2(p.y)});
+    }
     else toast('Spawn a kaiju first');
   }
-  else if(tool==='car')spawnCar(p.x);
-  else if(tool==='tank')spawnTank(p.x);
-  else if(tool==='heli')spawnHeli(p.x);
-  else if(tool==='jet')spawnJet(p.x);
-  else if(tool==='ship')spawnShip(p.x);
+  else if(['car','tank','heli','jet','ship'].includes(tool)){
+    ({car:spawnCar,tank:spawnTank,heli:spawnHeli,jet:spawnJet,ship:spawnShip})[tool](p.x);
+    netSend({t:'tool',tool,nx:nx2(p.x)});
+  }
 });
 window.addEventListener('pointermove',e=>{
   const mp=evPos(e);
@@ -4471,7 +4718,14 @@ window.addEventListener('pointermove',e=>{
     grab.cons.pointA.x=clamp(p.x,-100,W+100);
     grab.cons.pointA.y=clamp(p.y,-200,H+100);
   }
-  if(breathHold)sweepBreath(breathHold,evPos(e),performance.now());
+  if(breathHold){
+    const bp=evPos(e),bn=performance.now();
+    sweepBreath(breathHold,bp,bn);
+    if(bn-NET.lastSweep>120){
+      NET.lastSweep=bn;
+      netSend({t:'sweep',ti:titans.indexOf(breathHold),nx:nx2(bp.x),ny:ny2(bp.y)});
+    }
+  }
 });
 window.addEventListener('pointerup',()=>{releaseGrab();breathHold=null;});
 window.addEventListener('pointercancel',()=>{releaseGrab();breathHold=null;});
@@ -4490,6 +4744,7 @@ function tick(ts){
   const now=performance.now();
   let steps=0;
   if(paused)acc=0;
+  netSync();
   while(acc>=16.666&&steps<3){
     frame++;
     for(const t of titans){muscles(t,now);ultStep(t,now);breathStep(t,now);}
@@ -4703,7 +4958,8 @@ window.TS={engine,world,get titans(){return titans;},get buildings(){return buil
   spawnTitan,spawnBuilding,spawnBomb,spawnCar,spawnNuke,explode,nukeExplode,triggerBreath,resetWorld,loadLevel,get LVL(){return LVL;},
   get groundY(){return groundY;},get T(){return DIMS.titan;},get DIMS(){return DIMS;},
   SPECIES,get S(){return S;},get coins(){return coins;},award,OWN,spawnTank,spawnHeli,spawnJet,spawnShip,triggerUlt,
-  get SPRS(){return SPRS;},loadCustomSprites};
+  get SPRS(){return SPRS;},loadCustomSprites,
+  NET,coopHost,coopJoin,coopLeave,get fightMode(){return fightMode;},get bombs(){return bombs;}};
 })();
 </script>
 </body>

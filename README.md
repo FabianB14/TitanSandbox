@@ -31,11 +31,12 @@ buildings with his breath.
   - **Meka** — a giant robot kaiju: riveted gunmetal armor with panel lines,
     a glowing reactor core, visor eye, beacon antenna, angular metal fins,
     and a cyan laser. Klaxon roar.
-  - **Hydrax** (store unlock) — a radiant gold three-headed dragon: each
-    head wears a fanned crown of backswept horns, big golden membranous
-    wings spread from its back, dark tiger-striped banding rakes its limbs
-    and twin-tipped tail, and forked lightning slams around its target.
-    Cackling triple screech.
+  - **Hydrax** (store unlock) — a radiant gold three-headed dragon: every
+    head rides its own long serpentine S-curved neck crested with fins and
+    wears a fanned crown of backswept horns; big golden membranous wings
+    spread from its back, dark tiger-striped banding rakes its limbs and
+    tail, and forked lightning slams around its target. Cackling triple
+    screech.
   - **Vanguard** (store unlock) — a hero mech in white armor with a gold
     V-crest, red intakes, and a rapid plasma rifle.
   - **Skyrend** (store unlock) — a crimson flying wyvern that hovers on
@@ -73,9 +74,22 @@ buildings with his breath.
   drop the army in wherever you tap, alongside the automatic defense waves.
 - **Coins & store** — earn coins for crushing buildings, clearing levels,
   winning kaiju fights, wrecking the military, and popping cars; spend them
-  in the in-game store to unlock ten kaiju: Hydrax, Vanguard, Skyrend,
-  Lumen, Fenrix, Krustor, Magnar, Umbrax, Cobalt, and Boreas (saved
-  on-device).
+  in the in-game store on **60 unlockables** (saved on-device): the ten
+  signature kaiju (Hydrax, Vanguard, Skyrend, Lumen, Fenrix, Krustor,
+  Magnar, Umbrax, Cobalt, Boreas) plus a 50-strong premium catalogue in
+  four sections —
+  - **⚡ Speedsters** — ten pint-size speed demons that tear across the
+    city trailing light, with a building-shredding Mach Dash ultimate.
+  - **🌸 Cuties** — fourteen small pastel kaiju with big sparkly eyes and
+    blush (mini titans, fairy-winged flyers, baby serpents) — adorable and
+    still city-levelling.
+  - **🫧 Blobs** — six wobbling goo titans (including King Blobbo) that
+    hop, splat goo globs, and erupt in an all-directions Goo Burst.
+  - **🔥 Elites** — twenty supercharged colourways of the great kaiju
+    (Omega, Gilded, Solar, Eclipse, Glacier…) that inherit their base
+    rig's signature ultimate, priced for collectors (up to 10,000 coins).
+  Owned catalogue kaiju spawn straight from the store: tap SPAWN, then tap
+  the city.
 - **Warships** — on water levels destroyers cruise the bay and shell the
   kaiju alongside the tanks, helicopters, and jets. Cars explode from hard
   impacts, blasts, and beam fire — with chain reactions.
